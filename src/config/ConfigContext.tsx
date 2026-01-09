@@ -20,7 +20,24 @@ type ContactSection = {
 
 type CtaSection = { heading?: BilingualText | string; subheading?: BilingualText | string; [key: string]: unknown };
 
-type ServiceItem = { title?: BilingualText | string; description?: BilingualText | string; image?: string; [key: string]: unknown };
+type ServiceIncludeItem = { title?: BilingualText | string; image?: string; [key: string]: unknown };
+type ServiceGalleryItem = { url?: string; caption?: BilingualText | string; [key: string]: unknown };
+type ServiceDetails = {
+  heroImage?: string;
+  longDescription?: BilingualText | string;
+  includes?: ServiceIncludeItem[];
+  gallery?: ServiceGalleryItem[];
+  advantages?: Array<BilingualText | string>;
+  [key: string]: unknown;
+};
+
+type ServiceItem = {
+  title?: BilingualText | string;
+  description?: BilingualText | string;
+  image?: string;
+  details?: ServiceDetails;
+  [key: string]: unknown;
+};
 type ServicesSection = { items?: ServiceItem[]; [key: string]: unknown };
 
 type HeroSection = {

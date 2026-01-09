@@ -227,9 +227,27 @@ const services = [
   },
 ];
 
+type BilingualText = { en?: string; ar?: string };
+type ServiceIncludeConfigItem = { title?: unknown; image?: unknown };
+type ServiceGalleryConfigItem = { url?: unknown; caption?: unknown };
+type ServiceDetailsConfig = {
+  heroImage?: unknown;
+  longDescription?: unknown;
+  includes?: unknown;
+  gallery?: unknown;
+  advantages?: unknown;
+};
+type ServiceItemConfig = {
+  title?: unknown;
+  description?: unknown;
+  image?: unknown;
+  details?: ServiceDetailsConfig;
+};
+
 function ServiceDetail() {
   const { id } = useParams();
-  const service = services.find((s) => s.id === parseInt(id || '0'));
+  const idNum = Number.parseInt(id || '0', 10);
+  const fallbackService = services.find((s) => s.id === idNum);
   const [openImage, setOpenImage] = useState<string | null>(null);
   const { config, t } = useConfig();
   const pickText = (value: unknown): string => {
@@ -242,9 +260,49 @@ function ServiceDetail() {
     if (typeof en === 'string') return en;
     return '';
   };
-  const cfgItem = service ? (config?.sections?.services?.items || [])[service.id - 1] : null;
-  const title = cfgItem ? (t(cfgItem.title) || pickText(cfgItem?.title) || service?.title) : service?.title;
-  const description = cfgItem ? (t(cfgItem.description) || pickText(cfgItem?.description) || service?.description) : service?.description;
+
+  const takeString = (v: unknown): string => (typeof v === 'string' && v.trim() ? v.trim() : '');
+  const cfgItemsUnknown = config?.sections?.services?.items as unknown;
+  const cfgItems: ServiceItemConfig[] = Array.isArray(cfgItemsUnknown) ? (cfgItemsUnknown as ServiceItemConfig[]) : [];
+  const cfgItem = idNum > 0 ? cfgItems[idNum - 1] : undefined;
+  const details = cfgItem?.details;
+
+  const title = cfgItem?.title ? (t(cfgItem.title) || pickText(cfgItem.title) || fallbackService?.title || '') : (fallbackService?.title || '');
+  const description = cfgItem?.description ? (t(cfgItem.description) || pickText(cfgItem.description) || fallbackService?.description || '') : (fallbackService?.description || '');
+
+  const heroFromDetails = takeString(details?.heroImage);
+  const heroFromCard = takeString(cfgItem?.image);
+  const heroBackground = heroFromDetails || heroFromCard || (fallbackService?.image ? String(fallbackService.image) : '');
+
+  const longFromDetails = details?.longDescription ? (t(details.longDescription) || pickText(details.longDescription) || '') : '';
+  const longDescription = longFromDetails || (fallbackService?.longDescription || '') || description || '';
+
+  const includesRaw = Array.isArray(details?.includes) ? (details?.includes as ServiceIncludeConfigItem[]) : [];
+  const includes = includesRaw
+    .map((it) => ({
+      title: it?.title ? (t(it.title) || pickText(it.title) || '') : '',
+      image: takeString(it?.image),
+    }))
+    .filter((it) => it.title || it.image);
+  const fallbackIncludes = (fallbackService?.subTitles || []).map((it) => ({ title: it.title, image: String(it.image) }));
+  const includesList = includes.length ? includes : fallbackIncludes;
+
+  const galleryRaw = Array.isArray(details?.gallery) ? (details?.gallery as ServiceGalleryConfigItem[]) : [];
+  const gallery = galleryRaw
+    .map((it) => ({
+      url: takeString(it?.url),
+      caption: it?.caption ? (t(it.caption) || pickText(it.caption) || '') : '',
+    }))
+    .filter((it) => it.url);
+  const fallbackGallery = (fallbackService?.detailImages || []).map((it) => ({ url: String(it.url), caption: it.caption }));
+  const galleryList = gallery.length ? gallery : fallbackGallery;
+
+  const advantagesRaw = Array.isArray(details?.advantages) ? (details?.advantages as Array<BilingualText | string>) : [];
+  const advantages = advantagesRaw
+    .map((it) => (typeof it === 'string' ? it : (t(it) || pickText(it) || '')))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const advantagesList = advantages.length ? advantages : (fallbackService?.advantages || []);
 
   // عند تحميل الصفحة، يتم التمرير إلى محتوى الخدمة
   useEffect(() => {
@@ -254,7 +312,7 @@ function ServiceDetail() {
     }
   }, []);
 
-  if (!service) {
+  if (!cfgItem && !fallbackService) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-4xl font-bold mb-4">الخدمة غير موجودة</h1>
@@ -328,7 +386,7 @@ function ServiceDetail() {
         <div className="w-full relative overflow-hidden" style={{ height: '70vh', maxHeight: '700px' }}>
           <div
             className="absolute inset-0 hero-bg"
-            style={{ backgroundImage: `url(${service.image})` }}
+            style={heroBackground ? { backgroundImage: `url(${heroBackground})` } : { backgroundImage: 'linear-gradient(135deg, #16a34a, #0f766e)' }}
           ></div>
           <div className="absolute inset-0 hero-overlay"></div>
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
@@ -356,12 +414,12 @@ function ServiceDetail() {
             <div className="mb-12 bg-green-50 p-6 rounded-2xl border-r-4 border-green-500 animate-fade-in">
               <h2 className="text-2xl font-bold text-green-700 mb-4 text-right">نبذة عن الخدمة</h2>
               <p className="text-lg text-gray-700 leading-relaxed text-right">
-                {service.longDescription}
+                {longDescription}
               </p>
             </div>
 
             {/* قسم "خدماتنا تشمل" */}
-            {service.subTitles && service.subTitles.length > 0 && (
+            {includesList.length > 0 && (
               <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.2s' }} dir="rtl">
                 <div className="flex items-center mb-8">
                   <h3 className="text-2xl font-bold text-gray-800">
@@ -370,19 +428,23 @@ function ServiceDetail() {
                   <div className="flex-grow border-b border-gray-200 mr-4"></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" dir="rtl">
-                  {service.subTitles.map((subService, index) => (
+                  {includesList.map((subService, index) => (
                     <div
                       key={index}
                       className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 flex flex-col h-full"
                     >
                       <div className="relative overflow-hidden aspect-[4/3] md:aspect-auto">
-                        <img
-                          src={subService.image}
-                          alt={subService.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
-                          loading="lazy"
-                          onClick={() => setOpenImage(subService.image)}
-                        />
+                        {subService.image ? (
+                          <img
+                            src={subService.image}
+                            alt={subService.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+                            loading="lazy"
+                            onClick={() => setOpenImage(subService.image)}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200"></div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-300 pointer-events-none"></div>
                       </div>
                       <div className="p-4 flex-grow flex flex-col justify-between">
@@ -397,8 +459,43 @@ function ServiceDetail() {
               </div>
             )}
 
+            {galleryList.length > 0 && (
+              <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.3s' }} dir="rtl">
+                <div className="flex items-center mb-8">
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    <span className="border-b-3 border-green-500 pb-1">صور من الخدمة</span>
+                  </h3>
+                  <div className="flex-grow border-b border-gray-200 mr-4"></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" dir="rtl">
+                  {galleryList.map((g, index) => (
+                    <div
+                      key={index}
+                      className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 flex flex-col h-full"
+                    >
+                      <div className="relative overflow-hidden aspect-[4/3] md:aspect-auto">
+                        <img
+                          src={g.url}
+                          alt={g.caption || 'صورة'}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+                          loading="lazy"
+                          onClick={() => setOpenImage(g.url)}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-300 pointer-events-none"></div>
+                      </div>
+                      {g.caption ? (
+                        <div className="p-4">
+                          <p className="text-gray-800 font-medium text-right">{g.caption}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* قسم "مميزات الخدمة" */}
-            {service.advantages && service.advantages.length > 0 && (
+            {advantagesList.length > 0 && (
               <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.4s' }} dir="rtl">
                 <div className="flex items-center mb-8">
                   <h3 className="text-2xl font-bold text-gray-800">
@@ -407,7 +504,7 @@ function ServiceDetail() {
                   <div className="flex-grow border-b border-gray-200 mr-4"></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {service.advantages.map((advantage, index) => (
+                  {advantagesList.map((advantage, index) => (
                     <div
                       key={index}
                       className="flex items-start space-x-4 space-x-reverse bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-green-200"

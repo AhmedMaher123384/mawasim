@@ -333,7 +333,7 @@ const SectionOrderItem = ({ id, label }) => {
 }
 
 // عنصر خدمة قابل للسحب لإعادة الترتيب
-const ServiceRowSortable = ({ id, svc, i, editLang, dir, updateService, safeDelete, removeService }) => {
+const ServiceRowSortable = ({ id, svc, i, editLang, dir, updateService, openServiceDetails, safeDelete, removeService }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -341,7 +341,7 @@ const ServiceRowSortable = ({ id, svc, i, editLang, dir, updateService, safeDele
   }
   return (
     <div ref={setNodeRef} style={style} className="row-cta">
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 1fr auto auto', gap: 10, alignItems: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 1fr auto auto auto', gap: 10, alignItems: 'center' }}>
         <URLInput
           label={editLang === 'ar' ? 'الصورة' : 'Image'}
           value={svc.image || ''}
@@ -366,6 +366,7 @@ const ServiceRowSortable = ({ id, svc, i, editLang, dir, updateService, safeDele
           placeholder={editLang === 'ar' ? 'وصف مختصر' : 'Short description'}
           rows={3}
         />
+        <button type="button" className="btn btn-outline" onClick={() => openServiceDetails(i)}>تفاصيل</button>
         <button type="button" className="btn btn-outline" aria-label="اسحب لإعادة الترتيب" {...attributes} {...listeners}>↕️</button>
         <button
           className="btn btn-ghost"
@@ -776,6 +777,7 @@ export default function Dashboard(props) {
   const [blockFilter, setBlockFilter] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, message: '' });
+  const [serviceDetailsModal, setServiceDetailsModal] = useState({ isOpen: false, index: -1 });
 
   const dir = editLang === 'ar' ? 'rtl' : 'ltr';
   const previewRef = useRef(null);
@@ -1053,14 +1055,119 @@ export default function Dashboard(props) {
     setConfirmModal({ isOpen: true, onConfirm: () => { callback(); setConfirmModal({ isOpen: false }); }, message });
   };
 
+  const ensureServiceDetails = (svc) => {
+    svc.details = svc.details || {};
+    svc.details.heroImage = typeof svc.details.heroImage === 'string' ? svc.details.heroImage : '';
+    const ld = svc.details.longDescription;
+    const validLd = ld && typeof ld === 'object' && !Array.isArray(ld) && (('en' in ld) || ('ar' in ld));
+    if (!validLd) svc.details.longDescription = { en: '', ar: '' };
+    svc.details.includes = Array.isArray(svc.details.includes) ? svc.details.includes : [];
+    svc.details.includes = svc.details.includes.map((it) => {
+      const title = it?.title;
+      const validTitle = title && typeof title === 'object' && !Array.isArray(title) && (('en' in title) || ('ar' in title));
+      return {
+        ...it,
+        image: typeof it?.image === 'string' ? it.image : '',
+        title: validTitle ? title : { en: '', ar: '' },
+      };
+    });
+    svc.details.gallery = Array.isArray(svc.details.gallery) ? svc.details.gallery : [];
+    svc.details.gallery = svc.details.gallery.map((it) => {
+      const caption = it?.caption;
+      const validCaption = caption && typeof caption === 'object' && !Array.isArray(caption) && (('en' in caption) || ('ar' in caption));
+      return {
+        ...it,
+        url: typeof it?.url === 'string' ? it.url : '',
+        caption: validCaption ? caption : { en: '', ar: '' },
+      };
+    });
+    svc.details.advantages = Array.isArray(svc.details.advantages) ? svc.details.advantages : [];
+    svc.details.advantages = svc.details.advantages.map((it) => {
+      const valid = it && typeof it === 'object' && !Array.isArray(it) && (('en' in it) || ('ar' in it));
+      if (valid) return it;
+      const v = typeof it === 'string' ? it : '';
+      return { en: v, ar: v };
+    });
+  };
+
+  const openServiceDetails = (i) => {
+    const svc = cfg?.sections?.services?.items?.[i];
+    if (!svc) return;
+    ensureServiceDetails(svc);
+    setConfig(cfg);
+    setServiceDetailsModal({ isOpen: true, index: i });
+  };
+  const closeServiceDetails = () => setServiceDetailsModal({ isOpen: false, index: -1 });
+
+  const updateActiveServiceDetails = (mutate) => {
+    const i = serviceDetailsModal.index;
+    const svc = cfg?.sections?.services?.items?.[i];
+    if (!svc) return;
+    ensureServiceDetails(svc);
+    mutate(svc);
+    setConfig(cfg);
+  };
+
+  const updateServiceHeroImage = (v) => updateActiveServiceDetails((svc) => {
+    svc.details.heroImage = v;
+  });
+  const updateServiceLongDescription = (v) => updateActiveServiceDetails((svc) => {
+    svc.details.longDescription[editLang] = v;
+  });
+
+  const addServiceInclude = () => updateActiveServiceDetails((svc) => {
+    svc.details.includes.push({ title: { en: '', ar: '' }, image: '' });
+  });
+  const updateServiceIncludeTitle = (j, v) => updateActiveServiceDetails((svc) => {
+    svc.details.includes[j].title[editLang] = v;
+  });
+  const updateServiceIncludeImage = (j, v) => updateActiveServiceDetails((svc) => {
+    svc.details.includes[j].image = v;
+  });
+  const removeServiceInclude = (j) => updateActiveServiceDetails((svc) => {
+    svc.details.includes.splice(j, 1);
+  });
+
+  const addServiceGallery = () => updateActiveServiceDetails((svc) => {
+    svc.details.gallery.push({ url: '', caption: { en: '', ar: '' } });
+  });
+  const updateServiceGalleryCaption = (j, v) => updateActiveServiceDetails((svc) => {
+    svc.details.gallery[j].caption[editLang] = v;
+  });
+  const updateServiceGalleryUrl = (j, v) => updateActiveServiceDetails((svc) => {
+    svc.details.gallery[j].url = v;
+  });
+  const removeServiceGallery = (j) => updateActiveServiceDetails((svc) => {
+    svc.details.gallery.splice(j, 1);
+  });
+
+  const addServiceAdvantage = () => updateActiveServiceDetails((svc) => {
+    svc.details.advantages.push({ en: '', ar: '' });
+  });
+  const updateServiceAdvantage = (j, v) => updateActiveServiceDetails((svc) => {
+    svc.details.advantages[j][editLang] = v;
+  });
+  const removeServiceAdvantage = (j) => updateActiveServiceDetails((svc) => {
+    svc.details.advantages.splice(j, 1);
+  });
+
   const addService = () => {
+    const nextIndex = cfg.sections.services.items.length;
     cfg.sections.services.items.push({
       title: { en: '', ar: '' },
       description: { en: '', ar: '' },
       icon: '•',
-      image: ''
+      image: '',
+      details: {
+        heroImage: '',
+        longDescription: { en: '', ar: '' },
+        includes: [],
+        gallery: [],
+        advantages: [],
+      }
     });
     setConfig(cfg);
+    setServiceDetailsModal({ isOpen: true, index: nextIndex });
   };
   const updateService = (i, field, v) => {
     const item = cfg.sections.services.items[i]
@@ -1315,6 +1422,21 @@ export default function Dashboard(props) {
     cfg.site.tabTitle = cfg.site.tabTitle || { en: '', ar: '' };
     cfg.site.sectionsOrder = Array.isArray(cfg.site.sectionsOrder) ? cfg.site.sectionsOrder : [];
     cfg.sections = cfg.sections || {};
+    cfg.sections.services = cfg.sections.services || { enabled: true, heading: { en: 'Our Services', ar: 'خدماتنا' }, items: [], colors: {} };
+    cfg.sections.services.items = Array.isArray(cfg.sections.services.items) ? cfg.sections.services.items : [];
+    cfg.sections.services.items = cfg.sections.services.items.map((svc) => {
+      const title = svc?.title;
+      const desc = svc?.description;
+      const isTitleObj = title && typeof title === 'object' && !Array.isArray(title) && (('en' in title) || ('ar' in title));
+      const isDescObj = desc && typeof desc === 'object' && !Array.isArray(desc) && (('en' in desc) || ('ar' in desc));
+      return {
+        ...svc,
+        title: isTitleObj ? title : { en: '', ar: '' },
+        description: isDescObj ? desc : { en: '', ar: '' },
+        image: typeof svc?.image === 'string' ? svc.image : '',
+        icon: typeof svc?.icon === 'string' ? svc.icon : (svc?.icon ?? '•'),
+      };
+    });
     cfg.pages = cfg.pages || {};
     cfg.theme = cfg.theme || {};
     cfg.theme.primary = cfg.theme.primary || '';
@@ -1868,6 +1990,131 @@ export default function Dashboard(props) {
         onConfirm={confirmModal.onConfirm}
         message={confirmModal.message}
       />
+
+      {serviceDetailsModal.isOpen && (() => {
+        const svc = cfg?.sections?.services?.items?.[serviceDetailsModal.index];
+        if (!svc) return null;
+        ensureServiceDetails(svc);
+        return (
+          <div className="modal-backdrop" onClick={closeServiceDetails}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>تفاصيل صفحة الخدمة</h3>
+                <button className="modal-close" onClick={closeServiceDetails}>&times;</button>
+              </div>
+              <div className="modal-body">
+                <div className="panel-desc" style={{ marginBottom: 12 }}>
+                  {svc.title?.[editLang] || 'خدمة جديدة'}
+                </div>
+
+                <div className="row-grid row-2">
+                  <URLInput
+                    label="الصورة الرئيسية (الهيرو)"
+                    value={svc.details.heroImage || ''}
+                    onChange={updateServiceHeroImage}
+                    placeholder="رابط صورة كبيرة تظهر أعلى صفحة الخدمة"
+                    required={false}
+                  />
+                  <URLInput
+                    label="صورة بطاقة الخدمة (الهوم)"
+                    value={svc.image || ''}
+                    onChange={(v) => updateService(serviceDetailsModal.index, 'image', v)}
+                    placeholder="رابط الصورة التي تظهر في قائمة الخدمات"
+                    required={false}
+                  />
+                </div>
+
+                <TextArea
+                  label="نبذة عن الخدمة"
+                  value={svc.details.longDescription?.[editLang] || ''}
+                  onChange={updateServiceLongDescription}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'اكتب وصفًا تفصيليًا للخدمة...' : 'Write a detailed service overview...'}
+                  rows={6}
+                  required={false}
+                />
+
+                <div className="panel-header" style={{ marginTop: 18 }}>
+                  <div className="panel-title">خدماتنا تشمل</div>
+                  <button className="btn btn-outline" onClick={addServiceInclude}>إضافة عنصر</button>
+                </div>
+                <div className="row-grid" style={{ marginTop: 10 }}>
+                  {(svc.details.includes || []).map((it, j) => (
+                    <div key={j} style={{ display: 'grid', gridTemplateColumns: '220px 1fr auto', gap: 10, alignItems: 'center' }}>
+                      <URLInput
+                        label={editLang === 'ar' ? 'الصورة' : 'Image'}
+                        value={it.image || ''}
+                        onChange={(v) => updateServiceIncludeImage(j, v)}
+                        placeholder={editLang === 'ar' ? 'رابط الصورة' : 'Image URL'}
+                        required={false}
+                      />
+                      <TextInput
+                        label="العنوان"
+                        value={it.title?.[editLang] || ''}
+                        onChange={(v) => updateServiceIncludeTitle(j, v)}
+                        dir={dir}
+                        placeholder={editLang === 'ar' ? 'مثال: تنظيف السجاد بالبخار' : 'e.g., Steam carpet cleaning'}
+                        required={false}
+                      />
+                      <button className="btn btn-ghost" onClick={() => removeServiceInclude(j)}>حذف</button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="panel-header" style={{ marginTop: 18 }}>
+                  <div className="panel-title">صور من الخدمة</div>
+                  <button className="btn btn-outline" onClick={addServiceGallery}>إضافة صورة</button>
+                </div>
+                <div className="row-grid" style={{ marginTop: 10 }}>
+                  {(svc.details.gallery || []).map((it, j) => (
+                    <div key={j} style={{ display: 'grid', gridTemplateColumns: '220px 1fr auto', gap: 10, alignItems: 'center' }}>
+                      <URLInput
+                        label={editLang === 'ar' ? 'الصورة' : 'Image'}
+                        value={it.url || ''}
+                        onChange={(v) => updateServiceGalleryUrl(j, v)}
+                        placeholder={editLang === 'ar' ? 'رابط الصورة' : 'Image URL'}
+                        required={false}
+                      />
+                      <TextInput
+                        label="التسمية"
+                        value={it.caption?.[editLang] || ''}
+                        onChange={(v) => updateServiceGalleryCaption(j, v)}
+                        dir={dir}
+                        placeholder={editLang === 'ar' ? 'مثال: قبل/بعد' : 'e.g., Before/After'}
+                        required={false}
+                      />
+                      <button className="btn btn-ghost" onClick={() => removeServiceGallery(j)}>حذف</button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="panel-header" style={{ marginTop: 18 }}>
+                  <div className="panel-title">مميزات الخدمة</div>
+                  <button className="btn btn-outline" onClick={addServiceAdvantage}>إضافة ميزة</button>
+                </div>
+                <div className="row-grid" style={{ marginTop: 10 }}>
+                  {(svc.details.advantages || []).map((it, j) => (
+                    <div key={j} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
+                      <TextInput
+                        label={`ميزة ${j + 1}`}
+                        value={it?.[editLang] || ''}
+                        onChange={(v) => updateServiceAdvantage(j, v)}
+                        dir={dir}
+                        placeholder={editLang === 'ar' ? 'اكتب ميزة...' : 'Write an advantage...'}
+                        required={false}
+                      />
+                      <button className="btn btn-ghost" onClick={() => removeServiceAdvantage(j)}>حذف</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-primary" onClick={closeServiceDetails}>تم</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* زر فتح القائمة على الموبايل */}
       <button
@@ -2586,6 +2833,7 @@ export default function Dashboard(props) {
                             editLang={editLang}
                             dir={dir}
                             updateService={updateService}
+                            openServiceDetails={openServiceDetails}
                             safeDelete={safeDelete}
                             removeService={removeService}
                           />
