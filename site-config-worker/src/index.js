@@ -13,19 +13,26 @@ export default {
     const url = new URL(request.url)
 
     const origin = request.headers.get('Origin') || ''
-    const allowListStr = env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || '*'
-    const allowList = allowListStr === '*' ? '*' : allowListStr.split(',').map(s => s.trim()).filter(Boolean)
-    const allowedOrigin = allowList === '*' ? (origin || '*') : (allowList.includes(origin) ? origin : allowList[0] || '')
+    const allowListStr = (env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || '*').trim()
+    const allowAll = allowListStr === '*'
+    const allowList = allowAll ? [] : allowListStr.split(',').map(s => s.trim()).filter(Boolean)
+    const isNetlifyOrigin = typeof origin === 'string' && origin.endsWith('.netlify.app')
+    const isAllowedOrigin = allowAll ? true : (origin ? (allowList.includes(origin) || isNetlifyOrigin) : false)
+    const allowedOrigin = allowAll ? '*' : (isAllowedOrigin ? origin : '')
 
     const cors = {
-      'Access-Control-Allow-Origin': allowedOrigin || '*',
+      ...(allowedOrigin ? { 'Access-Control-Allow-Origin': allowedOrigin } : {}),
       'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+      'Vary': 'Origin',
     }
 
     // Preflight
     if (request.method === 'OPTIONS') {
-      return new Response('', { headers: cors })
+      if (origin && !isAllowedOrigin) {
+        return new Response('CORS Forbidden', { status: 403 })
+      }
+      return new Response('', { status: 204, headers: cors })
     }
 
     // Cloudinary signing endpoint (POST)

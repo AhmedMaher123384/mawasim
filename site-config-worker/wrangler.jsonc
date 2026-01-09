@@ -19,7 +19,7 @@
 		}
 	],
 	"vars": {
-		"ALLOWED_ORIGINS": "http://localhost:5174,https://content-dash.netlify.app,https://dash-front.netlify.app",
+		"ALLOWED_ORIGINS": "http://localhost:5174,https://content-dash.netlify.app,https://dash-front.netlify.app,https://mawasim.netlify.app",
 		"CLOUDINARY_CLOUD_NAME": "",
 		"CLOUDINARY_API_KEY": "",
 		"CLOUDINARY_API_SECRET": ""
