@@ -227,15 +227,10 @@ const services = [
   },
 ];
 
-type BilingualText = { en?: string; ar?: string };
 type ServiceIncludeConfigItem = { title?: unknown; image?: unknown };
-type ServiceGalleryConfigItem = { url?: unknown; caption?: unknown };
 type ServiceDetailsConfig = {
   heroImage?: unknown;
-  longDescription?: unknown;
   includes?: unknown;
-  gallery?: unknown;
-  advantages?: unknown;
 };
 type ServiceItemConfig = {
   title?: unknown;
@@ -274,9 +269,6 @@ function ServiceDetail() {
   const heroFromCard = takeString(cfgItem?.image);
   const heroBackground = heroFromDetails || heroFromCard || (fallbackService?.image ? String(fallbackService.image) : '');
 
-  const longFromDetails = details?.longDescription ? (t(details.longDescription) || pickText(details.longDescription) || '') : '';
-  const longDescription = longFromDetails || (fallbackService?.longDescription || '') || description || '';
-
   const includesRaw = Array.isArray(details?.includes) ? (details?.includes as ServiceIncludeConfigItem[]) : [];
   const includes = includesRaw
     .map((it) => ({
@@ -286,23 +278,6 @@ function ServiceDetail() {
     .filter((it) => it.title || it.image);
   const fallbackIncludes = (fallbackService?.subTitles || []).map((it) => ({ title: it.title, image: String(it.image) }));
   const includesList = includes.length ? includes : fallbackIncludes;
-
-  const galleryRaw = Array.isArray(details?.gallery) ? (details?.gallery as ServiceGalleryConfigItem[]) : [];
-  const gallery = galleryRaw
-    .map((it) => ({
-      url: takeString(it?.url),
-      caption: it?.caption ? (t(it.caption) || pickText(it.caption) || '') : '',
-    }))
-    .filter((it) => it.url);
-  const fallbackGallery = (fallbackService?.detailImages || []).map((it) => ({ url: String(it.url), caption: it.caption }));
-  const galleryList = gallery.length ? gallery : fallbackGallery;
-
-  const advantagesRaw = Array.isArray(details?.advantages) ? (details?.advantages as Array<BilingualText | string>) : [];
-  const advantages = advantagesRaw
-    .map((it) => (typeof it === 'string' ? it : (t(it) || pickText(it) || '')))
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const advantagesList = advantages.length ? advantages : (fallbackService?.advantages || []);
 
   // عند تحميل الصفحة، يتم التمرير إلى محتوى الخدمة
   useEffect(() => {
@@ -410,14 +385,6 @@ function ServiceDetail() {
         {/* محتوى الخدمة */}
         <div id="service-content" className="container mx-auto px-4 lg:px-8 py-16 -mt-20">
           <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-12 border-t-4 border-green-600">
-            {/* نبذة عن الخدمة */}
-            <div className="mb-12 bg-green-50 p-6 rounded-2xl border-r-4 border-green-500 animate-fade-in">
-              <h2 className="text-2xl font-bold text-green-700 mb-4 text-right">نبذة عن الخدمة</h2>
-              <p className="text-lg text-gray-700 leading-relaxed text-right">
-                {longDescription}
-              </p>
-            </div>
-
             {/* قسم "خدماتنا تشمل" */}
             {includesList.length > 0 && (
               <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.2s' }} dir="rtl">
@@ -453,75 +420,6 @@ function ServiceDetail() {
                         </h4>
                         <div className="mt-2 w-16 h-0.5 bg-green-500 transform origin-right transition-all duration-300 group-hover:w-full"></div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {galleryList.length > 0 && (
-              <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.3s' }} dir="rtl">
-                <div className="flex items-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-800">
-                    <span className="border-b-3 border-green-500 pb-1">صور من الخدمة</span>
-                  </h3>
-                  <div className="flex-grow border-b border-gray-200 mr-4"></div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" dir="rtl">
-                  {galleryList.map((g, index) => (
-                    <div
-                      key={index}
-                      className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 flex flex-col h-full"
-                    >
-                      <div className="relative overflow-hidden aspect-[4/3] md:aspect-auto">
-                        <img
-                          src={g.url}
-                          alt={g.caption || 'صورة'}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
-                          loading="lazy"
-                          onClick={() => setOpenImage(g.url)}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-300 pointer-events-none"></div>
-                      </div>
-                      {g.caption ? (
-                        <div className="p-4">
-                          <p className="text-gray-800 font-medium text-right">{g.caption}</p>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* قسم "مميزات الخدمة" */}
-            {advantagesList.length > 0 && (
-              <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.4s' }} dir="rtl">
-                <div className="flex items-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-800">
-                    <span className="border-b-3 border-green-500 pb-1">مميزات الخدمة</span>
-                  </h3>
-                  <div className="flex-grow border-b border-gray-200 mr-4"></div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {advantagesList.map((advantage, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start space-x-4 space-x-reverse bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-green-200"
-                    >
-                      <span className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-6 h-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </span>
-                      <p className="text-gray-700 font-medium text-lg">{advantage}</p>
                     </div>
                   ))}
                 </div>

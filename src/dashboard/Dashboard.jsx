@@ -1058,9 +1058,6 @@ export default function Dashboard(props) {
   const ensureServiceDetails = (svc) => {
     svc.details = svc.details || {};
     svc.details.heroImage = typeof svc.details.heroImage === 'string' ? svc.details.heroImage : '';
-    const ld = svc.details.longDescription;
-    const validLd = ld && typeof ld === 'object' && !Array.isArray(ld) && (('en' in ld) || ('ar' in ld));
-    if (!validLd) svc.details.longDescription = { en: '', ar: '' };
     svc.details.includes = Array.isArray(svc.details.includes) ? svc.details.includes : [];
     svc.details.includes = svc.details.includes.map((it) => {
       const title = it?.title;
@@ -1070,23 +1067,6 @@ export default function Dashboard(props) {
         image: typeof it?.image === 'string' ? it.image : '',
         title: validTitle ? title : { en: '', ar: '' },
       };
-    });
-    svc.details.gallery = Array.isArray(svc.details.gallery) ? svc.details.gallery : [];
-    svc.details.gallery = svc.details.gallery.map((it) => {
-      const caption = it?.caption;
-      const validCaption = caption && typeof caption === 'object' && !Array.isArray(caption) && (('en' in caption) || ('ar' in caption));
-      return {
-        ...it,
-        url: typeof it?.url === 'string' ? it.url : '',
-        caption: validCaption ? caption : { en: '', ar: '' },
-      };
-    });
-    svc.details.advantages = Array.isArray(svc.details.advantages) ? svc.details.advantages : [];
-    svc.details.advantages = svc.details.advantages.map((it) => {
-      const valid = it && typeof it === 'object' && !Array.isArray(it) && (('en' in it) || ('ar' in it));
-      if (valid) return it;
-      const v = typeof it === 'string' ? it : '';
-      return { en: v, ar: v };
     });
   };
 
@@ -1111,9 +1091,6 @@ export default function Dashboard(props) {
   const updateServiceHeroImage = (v) => updateActiveServiceDetails((svc) => {
     svc.details.heroImage = v;
   });
-  const updateServiceLongDescription = (v) => updateActiveServiceDetails((svc) => {
-    svc.details.longDescription[editLang] = v;
-  });
 
   const addServiceInclude = () => updateActiveServiceDetails((svc) => {
     svc.details.includes.push({ title: { en: '', ar: '' }, image: '' });
@@ -1128,29 +1105,6 @@ export default function Dashboard(props) {
     svc.details.includes.splice(j, 1);
   });
 
-  const addServiceGallery = () => updateActiveServiceDetails((svc) => {
-    svc.details.gallery.push({ url: '', caption: { en: '', ar: '' } });
-  });
-  const updateServiceGalleryCaption = (j, v) => updateActiveServiceDetails((svc) => {
-    svc.details.gallery[j].caption[editLang] = v;
-  });
-  const updateServiceGalleryUrl = (j, v) => updateActiveServiceDetails((svc) => {
-    svc.details.gallery[j].url = v;
-  });
-  const removeServiceGallery = (j) => updateActiveServiceDetails((svc) => {
-    svc.details.gallery.splice(j, 1);
-  });
-
-  const addServiceAdvantage = () => updateActiveServiceDetails((svc) => {
-    svc.details.advantages.push({ en: '', ar: '' });
-  });
-  const updateServiceAdvantage = (j, v) => updateActiveServiceDetails((svc) => {
-    svc.details.advantages[j][editLang] = v;
-  });
-  const removeServiceAdvantage = (j) => updateActiveServiceDetails((svc) => {
-    svc.details.advantages.splice(j, 1);
-  });
-
   const addService = () => {
     const nextIndex = cfg.sections.services.items.length;
     cfg.sections.services.items.push({
@@ -1160,10 +1114,7 @@ export default function Dashboard(props) {
       image: '',
       details: {
         heroImage: '',
-        longDescription: { en: '', ar: '' },
         includes: [],
-        gallery: [],
-        advantages: [],
       }
     });
     setConfig(cfg);
@@ -1855,6 +1806,12 @@ export default function Dashboard(props) {
           animation: scaleIn 0.25s;
         }
 
+        .modal-content.modal-service-details {
+          max-width: 980px;
+          max-height: 86vh;
+          overflow: hidden;
+        }
+
         .modal-header {
           display: flex;
           justify-content: space-between;
@@ -1878,6 +1835,84 @@ export default function Dashboard(props) {
 
         .modal-body {
           padding: 24px;
+        }
+
+        .modal-body.modal-body-scroll {
+          padding: 18px 24px 22px;
+          overflow: auto;
+          max-height: calc(86vh - 140px);
+        }
+
+        .svc-modal-subtitle {
+          font-size: 0.95rem;
+          color: var(--gray);
+          margin-bottom: 14px;
+        }
+
+        .svc-modal-section {
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 14px;
+          background: #fff;
+          margin-bottom: 14px;
+        }
+
+        .svc-modal-section-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
+        .svc-modal-section-title {
+          font-weight: 700;
+          color: var(--black);
+        }
+
+        .svc-modal-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .svc-modal-empty {
+          padding: 14px;
+          background: #f8f8f8;
+          border: 1px dashed var(--border);
+          border-radius: 12px;
+          color: var(--gray);
+          text-align: center;
+        }
+
+        .svc-modal-list {
+          display: grid;
+          gap: 10px;
+        }
+
+        .svc-include-card {
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 12px;
+          background: #fafafa;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 12px;
+          align-items: start;
+        }
+
+        .svc-include-fields {
+          display: grid;
+          grid-template-columns: 280px 1fr;
+          gap: 12px;
+          align-items: end;
+        }
+
+        .svc-include-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding-top: 28px;
         }
 
         .modal-body p {
@@ -1964,6 +1999,23 @@ export default function Dashboard(props) {
             padding: 18px;
           }
 
+          .svc-modal-grid-2 {
+            grid-template-columns: 1fr;
+          }
+
+          .svc-include-card {
+            grid-template-columns: 1fr;
+          }
+
+          .svc-include-fields {
+            grid-template-columns: 1fr;
+          }
+
+          .svc-include-actions {
+            padding-top: 0;
+            justify-content: flex-start;
+          }
+
           .preview-frame {
             height: 400px;
           }
@@ -1997,115 +2049,72 @@ export default function Dashboard(props) {
         ensureServiceDetails(svc);
         return (
           <div className="modal-backdrop" onClick={closeServiceDetails}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content modal-service-details" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h3>تفاصيل صفحة الخدمة</h3>
                 <button className="modal-close" onClick={closeServiceDetails}>&times;</button>
               </div>
-              <div className="modal-body">
-                <div className="panel-desc" style={{ marginBottom: 12 }}>
-                  {svc.title?.[editLang] || 'خدمة جديدة'}
+              <div className="modal-body modal-body-scroll">
+                <div className="svc-modal-subtitle">{svc.title?.[editLang] || 'خدمة جديدة'}</div>
+
+                <div className="svc-modal-section">
+                  <div className="svc-modal-section-title">الصور</div>
+                  <div className="svc-modal-grid-2">
+                    <URLInput
+                      label="الصورة الرئيسية (الهيرو)"
+                      value={svc.details.heroImage || ''}
+                      onChange={updateServiceHeroImage}
+                      placeholder="رابط صورة كبيرة تظهر أعلى صفحة الخدمة"
+                      required={false}
+                    />
+                    <URLInput
+                      label="صورة بطاقة الخدمة (الهوم)"
+                      value={svc.image || ''}
+                      onChange={(v) => updateService(serviceDetailsModal.index, 'image', v)}
+                      placeholder="رابط الصورة التي تظهر في قائمة الخدمات"
+                      required={false}
+                    />
+                  </div>
                 </div>
 
-                <div className="row-grid row-2">
-                  <URLInput
-                    label="الصورة الرئيسية (الهيرو)"
-                    value={svc.details.heroImage || ''}
-                    onChange={updateServiceHeroImage}
-                    placeholder="رابط صورة كبيرة تظهر أعلى صفحة الخدمة"
-                    required={false}
-                  />
-                  <URLInput
-                    label="صورة بطاقة الخدمة (الهوم)"
-                    value={svc.image || ''}
-                    onChange={(v) => updateService(serviceDetailsModal.index, 'image', v)}
-                    placeholder="رابط الصورة التي تظهر في قائمة الخدمات"
-                    required={false}
-                  />
-                </div>
+                <div className="svc-modal-section">
+                  <div className="svc-modal-section-head">
+                    <div className="svc-modal-section-title">خدماتنا تشمل</div>
+                    <button className="btn btn-outline" onClick={addServiceInclude}>إضافة عنصر</button>
+                  </div>
 
-                <TextArea
-                  label="نبذة عن الخدمة"
-                  value={svc.details.longDescription?.[editLang] || ''}
-                  onChange={updateServiceLongDescription}
-                  dir={dir}
-                  placeholder={editLang === 'ar' ? 'اكتب وصفًا تفصيليًا للخدمة...' : 'Write a detailed service overview...'}
-                  rows={6}
-                  required={false}
-                />
-
-                <div className="panel-header" style={{ marginTop: 18 }}>
-                  <div className="panel-title">خدماتنا تشمل</div>
-                  <button className="btn btn-outline" onClick={addServiceInclude}>إضافة عنصر</button>
-                </div>
-                <div className="row-grid" style={{ marginTop: 10 }}>
-                  {(svc.details.includes || []).map((it, j) => (
-                    <div key={j} style={{ display: 'grid', gridTemplateColumns: '220px 1fr auto', gap: 10, alignItems: 'center' }}>
-                      <URLInput
-                        label={editLang === 'ar' ? 'الصورة' : 'Image'}
-                        value={it.image || ''}
-                        onChange={(v) => updateServiceIncludeImage(j, v)}
-                        placeholder={editLang === 'ar' ? 'رابط الصورة' : 'Image URL'}
-                        required={false}
-                      />
-                      <TextInput
-                        label="العنوان"
-                        value={it.title?.[editLang] || ''}
-                        onChange={(v) => updateServiceIncludeTitle(j, v)}
-                        dir={dir}
-                        placeholder={editLang === 'ar' ? 'مثال: تنظيف السجاد بالبخار' : 'e.g., Steam carpet cleaning'}
-                        required={false}
-                      />
-                      <button className="btn btn-ghost" onClick={() => removeServiceInclude(j)}>حذف</button>
+                  {(svc.details.includes || []).length === 0 ? (
+                    <div className="svc-modal-empty">
+                      {editLang === 'ar' ? 'لا توجد عناصر بعد.' : 'No items yet.'}
                     </div>
-                  ))}
-                </div>
-
-                <div className="panel-header" style={{ marginTop: 18 }}>
-                  <div className="panel-title">صور من الخدمة</div>
-                  <button className="btn btn-outline" onClick={addServiceGallery}>إضافة صورة</button>
-                </div>
-                <div className="row-grid" style={{ marginTop: 10 }}>
-                  {(svc.details.gallery || []).map((it, j) => (
-                    <div key={j} style={{ display: 'grid', gridTemplateColumns: '220px 1fr auto', gap: 10, alignItems: 'center' }}>
-                      <URLInput
-                        label={editLang === 'ar' ? 'الصورة' : 'Image'}
-                        value={it.url || ''}
-                        onChange={(v) => updateServiceGalleryUrl(j, v)}
-                        placeholder={editLang === 'ar' ? 'رابط الصورة' : 'Image URL'}
-                        required={false}
-                      />
-                      <TextInput
-                        label="التسمية"
-                        value={it.caption?.[editLang] || ''}
-                        onChange={(v) => updateServiceGalleryCaption(j, v)}
-                        dir={dir}
-                        placeholder={editLang === 'ar' ? 'مثال: قبل/بعد' : 'e.g., Before/After'}
-                        required={false}
-                      />
-                      <button className="btn btn-ghost" onClick={() => removeServiceGallery(j)}>حذف</button>
+                  ) : (
+                    <div className="svc-modal-list">
+                      {(svc.details.includes || []).map((it, j) => (
+                        <div key={j} className="svc-include-card">
+                          <div className="svc-include-fields">
+                            <URLInput
+                              label={editLang === 'ar' ? 'الصورة' : 'Image'}
+                              value={it.image || ''}
+                              onChange={(v) => updateServiceIncludeImage(j, v)}
+                              placeholder={editLang === 'ar' ? 'رابط الصورة' : 'Image URL'}
+                              required={false}
+                            />
+                            <TextInput
+                              label="العنوان"
+                              value={it.title?.[editLang] || ''}
+                              onChange={(v) => updateServiceIncludeTitle(j, v)}
+                              dir={dir}
+                              placeholder={editLang === 'ar' ? 'مثال: تنظيف السجاد بالبخار' : 'e.g., Steam carpet cleaning'}
+                              required={false}
+                            />
+                          </div>
+                          <div className="svc-include-actions">
+                            <button className="btn btn-ghost" onClick={() => removeServiceInclude(j)}>حذف</button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-
-                <div className="panel-header" style={{ marginTop: 18 }}>
-                  <div className="panel-title">مميزات الخدمة</div>
-                  <button className="btn btn-outline" onClick={addServiceAdvantage}>إضافة ميزة</button>
-                </div>
-                <div className="row-grid" style={{ marginTop: 10 }}>
-                  {(svc.details.advantages || []).map((it, j) => (
-                    <div key={j} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
-                      <TextInput
-                        label={`ميزة ${j + 1}`}
-                        value={it?.[editLang] || ''}
-                        onChange={(v) => updateServiceAdvantage(j, v)}
-                        dir={dir}
-                        placeholder={editLang === 'ar' ? 'اكتب ميزة...' : 'Write an advantage...'}
-                        required={false}
-                      />
-                      <button className="btn btn-ghost" onClick={() => removeServiceAdvantage(j)}>حذف</button>
-                    </div>
-                  ))}
+                  )}
                 </div>
               </div>
               <div className="modal-footer">
