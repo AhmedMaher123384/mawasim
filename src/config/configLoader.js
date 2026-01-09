@@ -70,10 +70,12 @@ export async function loadConfig() {
     } catch {}
   }
 
-  // لا تُطبّق نسخة المتصفح إلا في وضع الإدارة (#admin)
+  // طبّق نسخة المتصفح عند تفعيل وضع الإدارة أو تفعيل المعاينة من لوحة التحكم
   try {
-    const isAdmin = typeof window !== 'undefined' && window.location && window.location.hash === '#admin'
-    if (isAdmin) {
+    const allowOverride =
+      (typeof window !== 'undefined' && window.location && window.location.hash === '#admin') ||
+      (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && localStorage.getItem('siteConfigOverrideEnabled') === '1')
+    if (allowOverride) {
       const overrideStr = localStorage.getItem('siteConfig')
       if (overrideStr) {
         const override = JSON.parse(overrideStr)

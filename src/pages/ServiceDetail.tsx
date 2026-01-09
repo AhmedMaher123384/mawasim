@@ -230,6 +230,7 @@ const services = [
 type ServiceIncludeConfigItem = { title?: unknown; image?: unknown };
 type ServiceDetailsConfig = {
   heroImage?: unknown;
+  longDescription?: unknown;
   includes?: unknown;
 };
 type ServiceItemConfig = {
@@ -264,6 +265,9 @@ function ServiceDetail() {
 
   const title = cfgItem?.title ? (t(cfgItem.title) || pickText(cfgItem.title) || fallbackService?.title || '') : (fallbackService?.title || '');
   const description = cfgItem?.description ? (t(cfgItem.description) || pickText(cfgItem.description) || fallbackService?.description || '') : (fallbackService?.description || '');
+  const longDescription = details?.longDescription
+    ? (t(details.longDescription) || pickText(details.longDescription) || fallbackService?.longDescription || '')
+    : (fallbackService?.longDescription || '');
 
   const heroFromDetails = takeString(details?.heroImage);
   const heroFromCard = takeString(cfgItem?.image);
@@ -385,6 +389,18 @@ function ServiceDetail() {
         {/* محتوى الخدمة */}
         <div id="service-content" className="container mx-auto px-4 lg:px-8 py-16 -mt-20">
           <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-12 border-t-4 border-green-600">
+            {longDescription ? (
+              <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.15s' }} dir="rtl">
+                <div className="flex items-center mb-8">
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    <span className="border-b-3 border-green-500 pb-1">نبذة عن الخدمة</span>
+                  </h3>
+                  <div className="flex-grow border-b border-gray-200 mr-4"></div>
+                </div>
+                <p className="text-gray-700 leading-relaxed text-lg text-right whitespace-pre-line">{longDescription}</p>
+              </div>
+            ) : null}
+
             {/* قسم "خدماتنا تشمل" */}
             {includesList.length > 0 && (
               <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.2s' }} dir="rtl">

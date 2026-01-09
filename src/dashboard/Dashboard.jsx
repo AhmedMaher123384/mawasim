@@ -1058,6 +1058,15 @@ export default function Dashboard(props) {
   const ensureServiceDetails = (svc) => {
     svc.details = svc.details || {};
     svc.details.heroImage = typeof svc.details.heroImage === 'string' ? svc.details.heroImage : '';
+    {
+      const ld = svc.details.longDescription;
+      const validLd = ld && typeof ld === 'object' && !Array.isArray(ld) && (('en' in ld) || ('ar' in ld));
+      if (typeof ld === 'string') {
+        svc.details.longDescription = { en: ld, ar: ld };
+      } else {
+        svc.details.longDescription = validLd ? ld : { en: '', ar: '' };
+      }
+    }
     svc.details.includes = Array.isArray(svc.details.includes) ? svc.details.includes : [];
     svc.details.includes = svc.details.includes.map((it) => {
       const title = it?.title;
@@ -1092,6 +1101,10 @@ export default function Dashboard(props) {
     svc.details.heroImage = v;
   });
 
+  const updateServiceLongDescription = (v) => updateActiveServiceDetails((svc) => {
+    svc.details.longDescription[editLang] = v;
+  });
+
   const addServiceInclude = () => updateActiveServiceDetails((svc) => {
     svc.details.includes.push({ title: { en: '', ar: '' }, image: '' });
   });
@@ -1114,6 +1127,7 @@ export default function Dashboard(props) {
       image: '',
       details: {
         heroImage: '',
+        longDescription: { en: '', ar: '' },
         includes: [],
       }
     });
@@ -1343,6 +1357,12 @@ export default function Dashboard(props) {
   };
 
   // ======== Live Preview ========
+  useEffect(() => {
+    try {
+      localStorage.setItem('siteConfigOverrideEnabled', '1');
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (livePreview && config) {
       try {
@@ -2075,6 +2095,19 @@ export default function Dashboard(props) {
                       required={false}
                     />
                   </div>
+                </div>
+
+                <div className="svc-modal-section">
+                  <div className="svc-modal-section-title">نبذة عن الخدمة</div>
+                  <TextArea
+                    label={editLang === 'ar' ? 'النص' : 'Text'}
+                    value={svc.details.longDescription?.[editLang] || ''}
+                    onChange={updateServiceLongDescription}
+                    dir={dir}
+                    placeholder={editLang === 'ar' ? 'اكتب نبذة تفصيلية عن الخدمة...' : 'Write a detailed service overview...'}
+                    rows={6}
+                    required={false}
+                  />
                 </div>
 
                 <div className="svc-modal-section">
