@@ -8,12 +8,19 @@ type IconComponent = typeof Home;
 type BilingualText = { en?: string; ar?: string };
 type MenuConfigItem = { href?: string; label?: BilingualText };
 type NavItem = { path: string; label: string; icon: IconComponent };
+type NavbarColors = { background?: string; text?: string; border?: string; accent?: string };
+type NavbarSectionConfig = { colors?: NavbarColors };
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { config, t } = useConfig();
+  const navbarSection = config?.sections?.navbar as NavbarSectionConfig | undefined;
+  const navbarColors = navbarSection?.colors;
+  const navbarBackground = typeof navbarColors?.background === 'string' && navbarColors.background.trim() ? navbarColors.background.trim() : '';
+  const navbarText = typeof navbarColors?.text === 'string' && navbarColors.text.trim() ? navbarColors.text.trim() : '';
+  const navbarBorder = typeof navbarColors?.border === 'string' && navbarColors.border.trim() ? navbarColors.border.trim() : '';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -85,19 +92,27 @@ function Navbar() {
   `;
 
   return (
-    <nav dir="rtl" className={`fixed top-0 right-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white shadow-sm'}`}>
+    <nav
+      dir="rtl"
+      className={`fixed top-0 right-0 w-full z-50 transition-all duration-300 ${scrolled ? 'shadow-md' : 'shadow-sm'}`}
+      style={{
+        backgroundColor: navbarBackground || undefined,
+        borderColor: navbarBorder || undefined,
+      }}
+    >
       <style>{animationStyles}</style>
       
       {/* شريط زخرفي علوي بسيط */}
       <div className="relative h-1 w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gray-200"></div>
+        <div className="absolute inset-0 bg-gray-200" style={{ backgroundColor: navbarBorder || undefined }}></div>
       </div>
       
       <div className="flex items-center justify-between h-24 px-6 relative">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="text-gray-800 hover:text-gray-600 focus:outline-none p-2 relative overflow-hidden rounded-full"
+          className={`focus:outline-none p-2 relative overflow-hidden rounded-full ${navbarText ? '' : 'text-gray-800 hover:text-gray-600'}`}
           aria-label="فتح القائمة"
+          style={{ color: navbarText || undefined }}
         >
           <span className="absolute inset-0 bg-gray-300 opacity-0 hover:opacity-100 rounded-full transition-opacity duration-300"></span>
           {isMenuOpen ? <X size={28} className="relative z-10" /> : <Menu size={28} className="relative z-10" />}
@@ -133,7 +148,7 @@ function Navbar() {
       
       {/* شريط زخرفي سفلي بسيط */}
       <div className="relative h-1 w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gray-200"></div>
+        <div className="absolute inset-0 bg-gray-200" style={{ backgroundColor: navbarBorder || undefined }}></div>
       </div>
 
       {/* القائمة الجانبية */}
@@ -142,13 +157,14 @@ function Navbar() {
         style={{ zIndex: 60 }}
       >
         <div className="relative h-1 w-full overflow-hidden">
-          <div className="absolute inset-0 bg-gray-200"></div>
+          <div className="absolute inset-0 bg-gray-200" style={{ backgroundColor: navbarBorder || undefined }}></div>
         </div>
         
         <button
           onClick={() => setIsMenuOpen(false)}
-          className="absolute top-4 left-4 text-gray-800 hover:text-gray-600 focus:outline-none p-2 rounded-full bg-gray-200 transition-all duration-300"
+          className={`absolute top-4 left-4 focus:outline-none p-2 rounded-full bg-gray-200 transition-all duration-300 ${navbarText ? '' : 'text-gray-800 hover:text-gray-600'}`}
           aria-label="إغلاق القائمة"
+          style={{ color: navbarText || undefined }}
         >
           <X size={20} />
         </button>
@@ -173,8 +189,9 @@ function Navbar() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-xl font-medium block transition-all duration-300 py-4 px-6 rounded-lg my-2 relative overflow-hidden group ${isActive(item.path) ? 'bg-gray-100 text-gray-900 shadow-md' : 'text-gray-900 hover:bg-gray-50'}`}
+                className={`text-xl font-medium block transition-all duration-300 py-4 px-6 rounded-lg my-2 relative overflow-hidden group ${isActive(item.path) ? 'bg-gray-100 shadow-md' : 'hover:bg-gray-50'} ${navbarText ? 'text-inherit' : 'text-gray-900'}`}
                 onClick={() => setIsMenuOpen(false)}
+                style={{ color: navbarText || undefined }}
               >
                 <span className="relative z-10 flex items-center justify-between">
                   <div className="flex items-center">
@@ -195,7 +212,7 @@ function Navbar() {
         </div>
         
         <div className="absolute bottom-8 w-full px-8 text-center">
-          <p className="text-gray-500 text-sm">مواسم الخدمات © 2025</p>
+          <p className="text-gray-500 text-sm" style={{ color: navbarText || undefined }}>{t(config?.site?.footerText) || 'مواسم الخدمات © 2025'}</p>
         </div>
         
         <div className="absolute bottom-0 w-full">

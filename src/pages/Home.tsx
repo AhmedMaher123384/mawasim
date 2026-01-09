@@ -104,6 +104,9 @@ interface Feature {
 
 type BilingualText = { en?: string; ar?: string };
 type HighlightItem = { title?: BilingualText; description?: BilingualText };
+type ServiceConfigItem = { title?: unknown; description?: unknown; image?: unknown; icon?: unknown };
+type WhyChooseConfigItem = { title?: unknown; description?: unknown; icon?: unknown };
+type CtaSectionConfig = { heading?: unknown; subheading?: unknown; items?: unknown[] };
 
 const DEFAULT_FEATURES: Feature[] = [
   {
@@ -203,18 +206,34 @@ function Home() {
       }))
     : DEFAULT_FEATURES;
 
-  const configServices = config?.sections?.services?.items;
-  const services: Service[] = Array.isArray(configServices) && configServices.length
-    ? DEFAULT_SERVICES.map((s, idx) => {
-        const it = configServices[idx];
-        return {
-          ...s,
-          title: it?.title ? (t(it.title) || pickText(it?.title) || s.title) : s.title,
-          description: it?.description ? (t(it.description) || pickText(it?.description) || s.description) : s.description,
-          image: it?.image ? it.image : s.image,
-        };
-      })
+  const configServicesUnknown = config?.sections?.services?.items as unknown;
+  const isRemoteImage = (src: unknown): src is string => {
+    if (typeof src !== 'string') return false;
+    const s = src.trim();
+    return Boolean(s) && (/^(https?:|data:|\/)/.test(s));
+  };
+  const services: Service[] = Array.isArray(configServicesUnknown) && configServicesUnknown.length
+    ? (configServicesUnknown as ServiceConfigItem[]).map((it, idx) => ({
+        id: idx + 1,
+        title: it?.title ? (t(it.title) || pickText(it?.title) || DEFAULT_SERVICES[idx]?.title || '') : (DEFAULT_SERVICES[idx]?.title || ''),
+        description: it?.description ? (t(it.description) || pickText(it?.description) || DEFAULT_SERVICES[idx]?.description || '') : (DEFAULT_SERVICES[idx]?.description || ''),
+        image: isRemoteImage(it?.image) ? it.image.trim() : null,
+        icon: DEFAULT_SERVICES[idx]?.icon || <Star className="w-5 h-5" />,
+      }))
     : DEFAULT_SERVICES;
+
+  const ctaSection = config?.sections?.cta as CtaSectionConfig | undefined;
+  const whyChooseUsHeading = ctaSection?.heading ? (t(ctaSection.heading) || pickText(ctaSection.heading) || 'لماذا تختارنا؟') : 'لماذا تختارنا؟';
+  const whyChooseUsSubheading = ctaSection?.subheading
+    ? (t(ctaSection.subheading) || pickText(ctaSection.subheading) || 'نسعى دائماً لتقديم أفضل خدمات التنظيف والصيانة بأعلى المعايير العالمية وبأسعار تنافسية')
+    : 'نسعى دائماً لتقديم أفضل خدمات التنظيف والصيانة بأعلى المعايير العالمية وبأسعار تنافسية';
+  const whyChooseUsData: WhyChooseUsItem[] = Array.isArray(ctaSection?.items) && ctaSection.items.length
+    ? (ctaSection.items as WhyChooseConfigItem[]).map((it) => ({
+        icon: <span className="text-4xl mb-4 text-white">{typeof it?.icon === 'string' && it.icon.trim() ? it.icon : '⭐'}</span>,
+        title: t(it?.title) || pickText(it?.title) || '',
+        description: t(it?.description) || pickText(it?.description) || '',
+      }))
+    : whyChooseUs;
 
   // Use a single state object for all visible sections
   const [visibleSections, setVisibleSections] = useState({
@@ -225,6 +244,17 @@ function Home() {
   
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [servicesWithImages, setServicesWithImages] = useState<Service[]>(services);
+
+  useEffect(() => {
+    setServicesWithImages((prev) => {
+      if (!Array.isArray(prev) || prev.length === 0) return services;
+      const prevById = new Map(prev.map((s) => [s.id, s]));
+      return services.map((s) => ({
+        ...s,
+        image: s.image || prevById.get(s.id)?.image || null,
+      }));
+    });
+  }, [services]);
   
   // References to sections - using a more efficient approach
   const servicesRef = useRef<HTMLDivElement>(null);
@@ -255,12 +285,13 @@ function Home() {
           const batch = services.slice(i, i + 2);
           await Promise.all(
             batch.map(async (service, idx) => {
-              const imageKey = `img${service.id}` as keyof typeof serviceImages;
+              const serviceIndex = i + idx;
+              const imageKey = `img${serviceIndex + 1}` as keyof typeof serviceImages;
               if (serviceImages[imageKey]) {
                 try {
-                  if (!updatedServices[i + idx].image) {
+                  if (!updatedServices[serviceIndex].image) {
                     const img = await serviceImages[imageKey]();
-                    updatedServices[i + idx].image = img;
+                    updatedServices[serviceIndex].image = img;
                   }
                 } catch (err) {
                   console.error(`Failed to load image for service ${service.id}`, err);
@@ -503,17 +534,17 @@ function Home() {
           <div className={`text-center mb-16 transition-all duration-500 ${
             visibleSections.whyChooseUs ? 'opacity-100 transform-none' : 'opacity-0 -translate-y-10'
           }`}>
-            <h2 className="text-4xl font-bold mb-4">لماذا تختارنا؟</h2>
+            <h2 className="text-4xl font-bold mb-4">{whyChooseUsHeading}</h2>
             <div className={`h-1 w-20 bg-white mx-auto mb-6 transition-all duration-500 delay-200 ${
               visibleSections.whyChooseUs ? 'w-20' : 'w-0'
             }`}></div>
             <p className="text-xl max-w-2xl mx-auto">
-              نسعى دائماً لتقديم أفضل خدمات التنظيف والصيانة بأعلى المعايير العالمية وبأسعار تنافسية
+              {whyChooseUsSubheading}
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {whyChooseUs.map((item, index) => (
+            {whyChooseUsData.map((item, index) => (
               <div 
                 key={index} 
                 className={`group bg-white/10 backdrop-blur-sm p-8 rounded-xl transition-all duration-300 hover:bg-white/20 flex flex-col items-center text-center transform hover:-translate-y-2 hover:shadow-xl ${
