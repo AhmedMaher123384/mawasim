@@ -137,27 +137,6 @@ function Navbar() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
         <div className="h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link to="/" className="flex items-center gap-3 min-w-0">
-              <div
-                className="p-2 rounded-xl"
-                style={{
-                  background: accentSoft,
-                  border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}`,
-                }}
-              >
-                <img
-                  src={logoSrc}
-                  alt={siteTitle}
-                  className="h-9 w-auto object-contain"
-                />
-              </div>
-              <div className="min-w-0">
-                <div className="font-bold text-base truncate">{t(config?.site?.tabTitle) || siteTitle}</div>
-              </div>
-            </Link>
-          </div>
-
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-200"
@@ -171,6 +150,16 @@ function Navbar() {
           >
             {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
+
+          <div className="flex items-center min-w-0">
+            <Link to="/" className="flex items-center min-w-0">
+              <img
+                src={logoSrc}
+                alt={siteTitle}
+                className="h-9 w-auto object-contain"
+              />
+            </Link>
+          </div>
         </div>
       </div>
 
