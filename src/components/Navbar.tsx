@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -15,11 +15,13 @@ type NavbarSectionConfig = { enabled?: boolean; colors?: NavbarColors };
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuMounted, setIsMenuMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { config, t } = useConfig();
   const navbarSection = config?.sections?.navbar as NavbarSectionConfig | undefined;
   const navbarDisabled = navbarSection?.enabled === false;
+  const menuUnmountTimeoutRef = useRef<number | null>(null);
 
   const hexToRgba = (hex: string, alpha: number) => {
     const h = hex.trim().replace('#', '');
@@ -52,6 +54,29 @@ function Navbar() {
       document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (menuUnmountTimeoutRef.current) {
+      window.clearTimeout(menuUnmountTimeoutRef.current);
+      menuUnmountTimeoutRef.current = null;
+    }
+    if (isMenuOpen) {
+      setIsMenuMounted(true);
+      return;
+    }
+    if (isMenuMounted) {
+      menuUnmountTimeoutRef.current = window.setTimeout(() => {
+        setIsMenuMounted(false);
+        menuUnmountTimeoutRef.current = null;
+      }, 260);
+    }
+    return () => {
+      if (menuUnmountTimeoutRef.current) {
+        window.clearTimeout(menuUnmountTimeoutRef.current);
+        menuUnmountTimeoutRef.current = null;
+      }
+    };
+  }, [isMenuOpen, isMenuMounted]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -163,21 +188,25 @@ function Navbar() {
         </div>
       </div>
 
-      <div className={`fixed inset-0 z-[80] ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} dir="rtl">
+      {isMenuMounted ? (
         <div
-          className={`absolute inset-0 bg-black/35 backdrop-blur-sm transition-opacity duration-200 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setIsMenuOpen(false)}
-        />
-
-        <aside
-          role="dialog"
-          aria-modal="true"
-          className={`absolute top-0 right-0 h-[100dvh] w-[88vw] max-w-[420px] overflow-y-auto bg-white transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-          style={{
-            color: computedText,
-            boxShadow: '0 28px 90px rgba(2, 6, 23, 0.22)',
-          }}
+          className={`fixed inset-0 z-[80] ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+          dir="rtl"
         >
+          <div
+            className={`absolute inset-0 bg-black/35 transition-opacity duration-200 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          <aside
+            role="dialog"
+            aria-modal="true"
+            className={`absolute top-0 right-0 h-[100dvh] w-[88vw] max-w-[420px] overflow-y-auto bg-white transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            style={{
+              color: computedText,
+              boxShadow: '0 28px 90px rgba(2, 6, 23, 0.22)',
+            }}
+          >
           <div
             className="absolute top-0 right-0 h-full w-2"
             style={{
@@ -278,8 +307,9 @@ function Navbar() {
               </div>
             </div>
           </div>
-        </aside>
-      </div>
+          </aside>
+        </div>
+      ) : null}
     </nav>
   );
 }

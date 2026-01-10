@@ -8,11 +8,21 @@ function ImageSlider({ images }: ImageSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (images.length <= 1) {
+      setCurrentIndex(0);
+      return;
+    }
+
+    setCurrentIndex((prevIndex) => {
+      if (!Number.isFinite(prevIndex)) return 0;
+      return Math.min(prevIndex, images.length - 1);
+    });
+
+    const interval = window.setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 3000);
-  
-    return () => clearInterval(interval);
+
+    return () => window.clearInterval(interval);
   }, [images.length]);
 
   return (
