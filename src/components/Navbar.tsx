@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronLeft, Home, Users, Briefcase, PhoneCall } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useConfig } from '../config/ConfigContext';
 
-type IconComponent = typeof Home;
 type BilingualText = { en?: string; ar?: string };
 type MenuConfigItem = { href?: string; label?: BilingualText };
 type NavItem =
-  | { kind: 'router'; to: string; label: string; icon: IconComponent; isActive: boolean }
-  | { kind: 'external'; href: string; label: string; icon: IconComponent };
+  | { kind: 'router'; to: string; label: string; isActive: boolean }
+  | { kind: 'external'; href: string; label: string };
 type NavbarColors = { background?: string; text?: string; border?: string; accent?: string };
 type NavbarSectionConfig = { enabled?: boolean; colors?: NavbarColors };
 
@@ -84,13 +83,6 @@ function Navbar() {
     { href: '/contact', label: { en: 'Contact', ar: 'وسائل التواصل' } },
   ];
 
-  const iconByPath: Record<string, IconComponent> = {
-    '/': Home,
-    '/about': Users,
-    '/partners': Briefcase,
-    '/contact': PhoneCall,
-  };
-
   const rawMenu: MenuConfigItem[] = Array.isArray(config?.site?.menu) && config.site.menu.length
     ? (config.site.menu as MenuConfigItem[])
     : [];
@@ -116,100 +108,62 @@ function Navbar() {
     const label = m?.label ? (t(m.label) || m.label.ar || m.label.en || '') : '';
     const hrefRaw = String(m?.href || '/');
     const normalized = normalizeHref(hrefRaw);
-    const pathnameOnly = normalized.kind === 'router' ? normalized.to.split('#')[0] || '/' : '/';
-    const icon = iconByPath[pathnameOnly] || Home;
-    if (normalized.kind === 'external') return { kind: 'external', href: normalized.href, label, icon };
-    return { kind: 'router', to: normalized.to, label, icon, isActive: computeActive(normalized.to) };
+    if (normalized.kind === 'external') return { kind: 'external', href: normalized.href, label };
+    return { kind: 'router', to: normalized.to, label, isActive: computeActive(normalized.to) };
   });
-
-  const animationStyles = `
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-    
-    @keyframes shimmerSlow {
-      0% { transform: translateX(-100%); }
-      50% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-    
-    @keyframes spinSlow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    @keyframes pulse {
-      0% { opacity: 0.6; }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; }
-    }
-    
-    @keyframes subtleGlow {
-      0% { box-shadow: 0 0 3px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0); }
-      50% { box-shadow: 0 0 5px rgba(0, 0, 0, 0.15), 0 0 10px rgba(0, 0, 0, 0.1); }
-      100% { box-shadow: 0 0 3px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0); }
-    }
-  `;
 
   const siteTitle = t(config?.site?.title) || 'مواسم';
   const computedBorder = navbarBorder || 'rgba(15, 23, 42, 0.08)';
   const computedText = navbarText || '#0f172a';
-  const computedBg = navbarBackground || (scrolled ? 'rgba(255, 255, 255, 0.92)' : 'rgba(255, 255, 255, 0.78)');
+  const computedBg = navbarBackground || '#ffffff';
   const accentSoft = hexToRgba(navbarAccent, 0.12) || 'rgba(22, 163, 74, 0.12)';
-  const accentSoft2 = hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)';
   const logoSrc =
     typeof config?.site?.logoNavbar === 'string' && config.site.logoNavbar.trim() ? config.site.logoNavbar : logo;
 
   const navStyle: CSSProperties = {
-    backgroundColor: computedBg,
-    borderBottom: `1px solid ${computedBorder}`,
     color: computedText,
-    backdropFilter: navbarBackground || isMenuOpen ? undefined : 'blur(10px)',
-    WebkitBackdropFilter: navbarBackground || isMenuOpen ? undefined : 'blur(10px)',
   };
 
   const itemBase =
-    'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 focus:outline-none focus-visible:ring-2';
+    'inline-flex items-center px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2';
 
   return (
-    <nav dir="rtl" className="fixed top-0 right-0 w-full z-50" style={navStyle}>
-      <style>{animationStyles}</style>
+    <nav dir="rtl" className="fixed top-0 right-0 w-full z-50 relative" style={navStyle}>
 
       <div
-        className="h-1 w-full"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `linear-gradient(90deg, ${navbarAccent}, ${hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)'}, transparent)`,
+          backgroundColor: computedBg,
+          borderBottom: `1px solid ${computedBorder}`,
+          boxShadow: scrolled ? '0 8px 24px rgba(15, 23, 42, 0.06)' : 'none',
         }}
       />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="h-20 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
+        <div className="h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link to="/" className="flex items-center gap-3 min-w-0">
               <div
-                className="p-2 rounded-2xl transition-transform duration-300"
+                className="p-2 rounded-xl"
                 style={{
-                  background: scrolled ? accentSoft : 'transparent',
-                  border: `1px solid ${scrolled ? accentSoft2 : 'transparent'}`,
+                  background: accentSoft,
+                  border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}`,
                 }}
               >
                 <img
                   src={logoSrc}
                   alt={siteTitle}
-                  className="h-10 w-auto object-contain"
+                  className="h-9 w-auto object-contain"
                 />
               </div>
-              <div className="hidden lg:block min-w-0">
-                <div className="font-extrabold text-base truncate">{siteTitle}</div>
-                <div className="text-xs opacity-70 truncate">{t(config?.site?.tabTitle) || ''}</div>
+              <div className="min-w-0">
+                <div className="font-bold text-base truncate">{t(config?.site?.tabTitle) || siteTitle}</div>
               </div>
             </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
             {navItems.map((item) => {
-              const Icon = item.icon;
               if (item.kind === 'external') {
                 return (
                   <a
@@ -220,11 +174,9 @@ function Navbar() {
                     className={itemBase}
                     style={{
                       color: computedText,
-                      border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(15, 23, 42, 0.12)'}`,
-                      background: 'transparent',
+                      borderBottom: `2px solid transparent`,
                     }}
                   >
-                    <Icon size={16} style={{ color: computedText }} />
                     <span>{item.label}</span>
                   </a>
                 );
@@ -237,13 +189,10 @@ function Navbar() {
                   to={item.to}
                   className={itemBase}
                   style={{
-                    color: computedText,
-                    background: active ? accentSoft2 : 'transparent',
-                    border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.18) || 'rgba(15, 23, 42, 0.12)')}`,
-                    boxShadow: active ? `0 10px 25px ${hexToRgba(navbarAccent, 0.14) || 'rgba(22, 163, 74, 0.14)'}` : undefined,
+                    color: active ? navbarAccent : computedText,
+                    borderBottom: `2px solid ${active ? navbarAccent : 'transparent'}`,
                   }}
                 >
-                  <Icon size={16} style={{ color: computedText }} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -256,8 +205,8 @@ function Navbar() {
             aria-label={isMenuOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
             style={{
               color: computedText,
-              background: scrolled ? accentSoft : 'transparent',
-              border: `1px solid ${scrolled ? accentSoft2 : (hexToRgba(navbarAccent, 0.18) || 'rgba(15, 23, 42, 0.12)')}`,
+              background: accentSoft,
+              border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}`,
             }}
           >
             {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -272,7 +221,7 @@ function Navbar() {
             onClick={() => setIsMenuOpen(false)}
             style={{
               background: 'rgba(2, 6, 23, 0.42)',
-              zIndex: 50,
+              zIndex: 40,
             }}
           />
           <div
@@ -282,24 +231,16 @@ function Navbar() {
               backgroundColor: navbarBackground || '#ffffff',
               color: computedText,
               borderLeft: `1px solid ${computedBorder}`,
-              boxShadow: `0 30px 90px ${hexToRgba(navbarAccent, 0.22) || 'rgba(2, 6, 23, 0.22)'}`,
+              boxShadow: '0 24px 80px rgba(2, 6, 23, 0.22)',
             }}
           >
-            <div
-              className="h-1 w-full"
-              style={{
-                backgroundImage: `linear-gradient(90deg, ${navbarAccent}, ${hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)'}, transparent)`,
-              }}
-            />
-
             <div className="p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-2xl" style={{ background: accentSoft, border: `1px solid ${accentSoft2}` }}>
+                <div className="p-2 rounded-xl" style={{ background: accentSoft, border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}` }}>
                   <img src={logoSrc} alt={siteTitle} className="h-10 w-auto object-contain" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-extrabold text-base truncate">{siteTitle}</div>
-                  <div className="text-xs opacity-70 truncate">{t(config?.site?.tabTitle) || ''}</div>
+                  <div className="font-bold text-base truncate">{t(config?.site?.tabTitle) || siteTitle}</div>
                 </div>
               </div>
 
@@ -310,7 +251,7 @@ function Navbar() {
                 style={{
                   color: computedText,
                   background: accentSoft,
-                  border: `1px solid ${accentSoft2}`,
+                  border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}`,
                 }}
               >
                 <X size={20} />
@@ -319,32 +260,14 @@ function Navbar() {
 
             <div className="px-4 pb-6">
               {navItems.map((item) => {
-                const Icon = item.icon;
                 const active = item.kind === 'router' ? item.isActive : false;
-                const commonClass = 'w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl transition-all duration-200';
-                const inner = (
-                  <>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{
-                          background: active ? accentSoft2 : (hexToRgba(navbarAccent, 0.08) || 'rgba(15, 23, 42, 0.06)'),
-                          border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.14) || 'rgba(15, 23, 42, 0.10)')}`,
-                        }}
-                      >
-                        <Icon size={18} />
-                      </div>
-                      <div className="font-bold truncate">{item.label}</div>
-                    </div>
-                    <ChevronLeft size={16} style={{ opacity: active ? 1 : 0.6 }} />
-                  </>
-                );
+                const commonClass = 'w-full flex items-center justify-between gap-3 px-4 py-4 rounded-xl transition-colors duration-150';
+                const inner = <div className="font-medium truncate">{item.label}</div>;
 
                 const style: CSSProperties = {
-                  color: computedText,
-                  background: active ? accentSoft2 : 'transparent',
-                  border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.12) || 'rgba(15, 23, 42, 0.10)')}`,
-                  boxShadow: active ? `0 14px 35px ${hexToRgba(navbarAccent, 0.14) || 'rgba(22, 163, 74, 0.14)'}` : undefined,
+                  color: active ? navbarAccent : computedText,
+                  background: active ? accentSoft : 'transparent',
+                  border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.25) || 'rgba(22, 163, 74, 0.25)') : 'rgba(15, 23, 42, 0.08)'}`,
                 };
 
                 if (item.kind === 'external') {

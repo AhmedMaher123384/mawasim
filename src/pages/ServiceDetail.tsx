@@ -391,13 +391,37 @@ function ServiceDetail() {
           <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-12 border-t-4 border-green-600">
             {longDescription ? (
               <div className="mb-14 animate-fade-in" style={{ animationDelay: '0.15s' }} dir="rtl">
-                <div className="flex items-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-800">
-                    <span className="border-b-3 border-green-500 pb-1">نبذة عن الخدمة</span>
-                  </h3>
-                  <div className="flex-grow border-b border-gray-200 mr-4"></div>
+                <div className="rounded-2xl border border-green-100 bg-gradient-to-br from-green-50 via-white to-white overflow-hidden">
+                  <div className="px-5 py-4 sm:px-7 sm:py-5 border-b border-green-100">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-green-600 text-white flex items-center justify-center font-bold">
+                          ن
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm text-green-700 font-semibold">معلومات الخدمة</div>
+                          <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 truncate">نبذة عن الخدمة</h3>
+                        </div>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-2">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                          مواسم
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-5 sm:p-7">
+                    <div className="rounded-xl bg-white border border-green-100 shadow-sm">
+                      <div className="p-4 sm:p-6">
+                        <p className="text-gray-800 leading-8 text-base sm:text-lg text-right whitespace-pre-line">
+                          {longDescription}
+                        </p>
+                      </div>
+                      <div className="h-1 w-full bg-gradient-to-l from-green-600 via-green-500 to-emerald-400" />
+                    </div>
+                  </div>
                 </div>
-                <p className="text-gray-700 leading-relaxed text-lg text-right whitespace-pre-line">{longDescription}</p>
               </div>
             ) : null}
 
