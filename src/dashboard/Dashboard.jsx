@@ -803,7 +803,17 @@ export default function Dashboard(props) {
   const ensureSection = (sec) => {
     cfg.sections[sec] = cfg.sections[sec] || { enabled: true, colors: {}, heading: { en: '', ar: '' } };
   };
-  const setSectionEnabled = (sec, v) => { ensureSection(sec); cfg.sections[sec].enabled = v; setConfig(cfg); };
+  const setSectionEnabled = (sec, v) => {
+    if (sec === 'footer') {
+      ensureFooter();
+      cfg.sections.footer.enabled = v;
+      setConfig(cfg);
+      return;
+    }
+    ensureSection(sec);
+    cfg.sections[sec].enabled = v;
+    setConfig(cfg);
+  };
   const setSectionText = (sec, key, v) => {
     ensureSection(sec);
     const cur = cfg.sections[sec][key];

@@ -76,6 +76,9 @@ type Site = {
   title?: BilingualText | string;
   tabTitle?: BilingualText | string;
   favicon?: string;
+  logoNavbar?: string;
+  logoFooter?: string;
+  footerText?: BilingualText | string;
   menu?: MenuItem[];
   [key: string]: unknown;
 };
