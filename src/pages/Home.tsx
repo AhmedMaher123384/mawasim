@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, lazy, Suspense, useMemo } from 'react';
+import React, { useCallback, useRef, useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Phone, Clock, Shield, Award, ThumbsUp , Sparkles } from 'lucide-react';
 import { useConfig } from '../config/ConfigContext';
@@ -182,7 +182,7 @@ interface SectionRefs {
 
 function Home() {
   const { config, t } = useConfig();
-  const pickText = (value: unknown): string => {
+  const pickText = useCallback((value: unknown): string => {
     if (typeof value === 'string') return value;
     if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
     const rec = value as Record<string, unknown>;
@@ -191,7 +191,7 @@ function Home() {
     if (typeof ar === 'string') return ar;
     if (typeof en === 'string') return en;
     return '';
-  };
+  }, []);
   const heroHeading = config?.sections?.hero?.heading ? (t(config.sections.hero.heading) || 'شركة مواسم الخدمات') : 'شركة مواسم الخدمات';
   const heroSubheading = config?.sections?.hero?.subheading ? (t(config.sections.hero.subheading) || 'شركة مواسم تقدم حلول راقية لنظافه الفلل و القصور و الفنادق و المولات') : 'شركة مواسم تقدم حلول راقية لنظافه الفلل و القصور و الفنادق و المولات';
   const heroCtaText = config?.sections?.hero?.cta?.text ? (t(config.sections.hero.cta.text) || 'خدماتنا') : 'خدماتنا';
@@ -207,20 +207,23 @@ function Home() {
     : DEFAULT_FEATURES;
 
   const configServicesUnknown = config?.sections?.services?.items as unknown;
-  const isRemoteImage = (src: unknown): src is string => {
+  const isRemoteImage = useCallback((src: unknown): src is string => {
     if (typeof src !== 'string') return false;
     const s = src.trim();
     return Boolean(s) && (/^(https?:|data:|\/)/.test(s));
-  };
-  const services: Service[] = Array.isArray(configServicesUnknown) && configServicesUnknown.length
-    ? (configServicesUnknown as ServiceConfigItem[]).map((it, idx) => ({
+  }, []);
+  const services: Service[] = useMemo(() => {
+    if (Array.isArray(configServicesUnknown) && configServicesUnknown.length) {
+      return (configServicesUnknown as ServiceConfigItem[]).map((it, idx) => ({
         id: idx + 1,
         title: it?.title ? (t(it.title) || pickText(it?.title) || DEFAULT_SERVICES[idx]?.title || '') : (DEFAULT_SERVICES[idx]?.title || ''),
         description: it?.description ? (t(it.description) || pickText(it?.description) || DEFAULT_SERVICES[idx]?.description || '') : (DEFAULT_SERVICES[idx]?.description || ''),
-        image: isRemoteImage(it?.image) ? it.image.trim() : null,
+        image: isRemoteImage(it?.image) ? String(it.image).trim() : null,
         icon: DEFAULT_SERVICES[idx]?.icon || <Star className="w-5 h-5" />,
-      }))
-    : DEFAULT_SERVICES;
+      }));
+    }
+    return DEFAULT_SERVICES;
+  }, [configServicesUnknown, isRemoteImage, pickText, t]);
 
   const ctaSection = config?.sections?.cta as CtaSectionConfig | undefined;
   const whyChooseUsHeading = ctaSection?.heading ? (t(ctaSection.heading) || pickText(ctaSection.heading) || 'لماذا تختارنا؟') : 'لماذا تختارنا؟';
@@ -547,7 +550,7 @@ function Home() {
             {whyChooseUsData.map((item, index) => (
               <div 
                 key={index} 
-                className={`group bg-white/10 backdrop-blur-sm p-8 rounded-xl transition-all duration-300 hover:bg-white/20 flex flex-col items-center text-center transform hover:-translate-y-2 hover:shadow-xl ${
+                className={`group bg-white/10 p-8 rounded-xl transition-all duration-300 hover:bg-white/20 flex flex-col items-center text-center transform hover:-translate-y-2 hover:shadow-xl md:backdrop-blur-sm ${
                   visibleSections.whyChooseUs ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
                 }`}
                 style={{ transitionDelay: `${Math.min(index * 100, 300)}ms` }}

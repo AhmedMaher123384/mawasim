@@ -495,7 +495,7 @@ function ServiceDetail() {
         {/* مودال عرض الصورة المكبرة */}
         {openImage && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-lg transition-opacity duration-700"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 transition-opacity duration-700 md:backdrop-blur-lg"
             onClick={() => setOpenImage(null)}
           >
             <div

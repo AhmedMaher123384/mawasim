@@ -22,6 +22,14 @@ function Navbar() {
   const navbarSection = config?.sections?.navbar as NavbarSectionConfig | undefined;
   const navbarDisabled = navbarSection?.enabled === false;
   const menuUnmountTimeoutRef = useRef<number | null>(null);
+  const scrollLockRef = useRef<{
+    scrollY: number;
+    bodyOverflow: string;
+    bodyPosition: string;
+    bodyTop: string;
+    bodyWidth: string;
+    htmlOverflow: string;
+  } | null>(null);
 
   const hexToRgba = (hex: string, alpha: number) => {
     const h = hex.trim().replace('#', '');
@@ -38,20 +46,41 @@ function Navbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, [navbarDisabled]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    const bodyStyle = document.body.style;
+    const htmlStyle = document.documentElement.style;
+    const scrollY = window.scrollY;
+    scrollLockRef.current = {
+      scrollY,
+      bodyOverflow: bodyStyle.overflow,
+      bodyPosition: bodyStyle.position,
+      bodyTop: bodyStyle.top,
+      bodyWidth: bodyStyle.width,
+      htmlOverflow: htmlStyle.overflow,
+    };
+    bodyStyle.overflow = 'hidden';
+    bodyStyle.position = 'fixed';
+    bodyStyle.top = `-${scrollY}px`;
+    bodyStyle.width = '100%';
+    htmlStyle.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
+      const snapshot = scrollLockRef.current;
+      const restoreScrollY = snapshot?.scrollY ?? 0;
+      const nextBody = document.body.style;
+      const nextHtml = document.documentElement.style;
+      nextBody.overflow = snapshot?.bodyOverflow ?? '';
+      nextBody.position = snapshot?.bodyPosition ?? '';
+      nextBody.top = snapshot?.bodyTop ?? '';
+      nextBody.width = snapshot?.bodyWidth ?? '';
+      nextHtml.overflow = snapshot?.htmlOverflow ?? '';
+      scrollLockRef.current = null;
+      window.scrollTo(0, restoreScrollY);
     };
   }, [isMenuOpen]);
 
@@ -150,7 +179,7 @@ function Navbar() {
   };
 
   return (
-    <nav dir="rtl" className="fixed top-0 right-0 w-full z-50 relative" style={navStyle}>
+    <nav dir="rtl" className="fixed top-0 right-0 w-full z-50" style={navStyle}>
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
