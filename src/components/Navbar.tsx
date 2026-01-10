@@ -7,7 +7,9 @@ import { useConfig } from '../config/ConfigContext';
 type IconComponent = typeof Home;
 type BilingualText = { en?: string; ar?: string };
 type MenuConfigItem = { href?: string; label?: BilingualText };
-type NavItem = { path: string; label: string; icon: IconComponent };
+type NavItem =
+  | { kind: 'router'; to: string; label: string; icon: IconComponent; isActive: boolean }
+  | { kind: 'external'; href: string; label: string; icon: IconComponent };
 type NavbarColors = { background?: string; text?: string; border?: string; accent?: string };
 type NavbarSectionConfig = { colors?: NavbarColors };
 
@@ -30,11 +32,11 @@ function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const defaultNavItems: NavItem[] = [
-    { path: '/', label: 'الرئيسية', icon: Home },
-    { path: '/about', label: 'من نحن', icon: Users },
-    { path: '/partners', label: 'شركاء النجاح', icon: Briefcase },
-    { path: '/contact', label: 'وسائل التواصل', icon: PhoneCall },
+  const defaultNavItems: MenuConfigItem[] = [
+    { href: '/', label: { en: 'Home', ar: 'الرئيسية' } },
+    { href: '/about', label: { en: 'About', ar: 'من نحن' } },
+    { href: '/partners', label: { en: 'Partners', ar: 'شركاء النجاح' } },
+    { href: '/contact', label: { en: 'Contact', ar: 'وسائل التواصل' } },
   ];
 
   const iconByPath: Record<string, IconComponent> = {
@@ -48,18 +50,32 @@ function Navbar() {
     ? (config.site.menu as MenuConfigItem[])
     : [];
 
-  const navItems: NavItem[] = rawMenu.length
-    ? rawMenu.map((m) => {
-        const path = String(m?.href || '/');
-        return {
-          path,
-          label: m?.label ? (t(m.label) || m?.label?.ar || m?.label?.en || '') : '',
-          icon: iconByPath[path] || Home,
-        };
-      })
-    : defaultNavItems;
+  const normalizeHref = (raw: string) => {
+    const href = raw.trim();
+    if (!href) return { kind: 'router' as const, to: '/' };
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(href)) return { kind: 'external' as const, href };
+    if (href.startsWith('#')) return { kind: 'router' as const, to: `/${href}` };
+    return { kind: 'router' as const, to: href };
+  };
 
-  const isActive = (path: string) => location.pathname === path;
+  const computeActive = (to: string) => {
+    const [pathname, hashPart] = to.split('#');
+    const hash = hashPart ? `#${hashPart}` : '';
+    if (hash) return location.pathname === (pathname || '/') && location.hash === hash;
+    return location.pathname === (pathname || '/');
+  };
+
+  const sourceMenu: MenuConfigItem[] = rawMenu.length ? rawMenu : defaultNavItems;
+
+  const navItems: NavItem[] = sourceMenu.map((m) => {
+    const label = m?.label ? (t(m.label) || m.label.ar || m.label.en || '') : '';
+    const hrefRaw = String(m?.href || '/');
+    const normalized = normalizeHref(hrefRaw);
+    const pathnameOnly = normalized.kind === 'router' ? normalized.to.split('#')[0] || '/' : '/';
+    const icon = iconByPath[pathnameOnly] || Home;
+    if (normalized.kind === 'external') return { kind: 'external', href: normalized.href, label, icon };
+    return { kind: 'router', to: normalized.to, label, icon, isActive: computeActive(normalized.to) };
+  });
 
   const animationStyles = `
     @keyframes shimmer {
@@ -172,7 +188,7 @@ function Navbar() {
         <div className="flex items-center justify-between h-20 px-6 relative">
           <div className="absolute inset-0 bg-gray-100 opacity-5 blur-xl rounded-full"></div>
           <img
-            src={logo}
+            src={typeof config?.site?.logoNavbar === 'string' ? config.site.logoNavbar : logo}
             alt="Mawasim Logo"
             className="h-32 w-auto object-contain"
           />
@@ -185,24 +201,46 @@ function Navbar() {
         <div className="p-4">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const active = item.kind === 'router' ? item.isActive : false;
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-xl font-medium block transition-all duration-300 py-4 px-6 rounded-lg my-2 relative overflow-hidden group ${isActive(item.path) ? 'bg-gray-100 shadow-md' : 'hover:bg-gray-50'} ${navbarText ? 'text-inherit' : 'text-gray-900'}`}
-                onClick={() => setIsMenuOpen(false)}
-                style={{ color: navbarText || undefined }}
-              >
-                <span className="relative z-10 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Icon size={18} className="ml-2 opacity-80" />
-                    <span>{item.label}</span>
-                  </div>
-                  {isActive(item.path) && <ChevronLeft size={16} className="mr-2" />}
-                </span>
-                <span className="absolute right-0 w-2 h-full bg-gray-300 opacity-0 group-hover:opacity-50 transition-all duration-500 transform -skew-x-12 translate-x-20 group-hover:translate-x-0"></span>
-                <span className="absolute inset-0 bg-gray-100 opacity-0 group-hover:opacity-20 transition-all duration-500"></span>
-              </Link>
+              item.kind === 'external' ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target={item.href.startsWith('http') ? '_blank' : undefined}
+                  rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                  className={`text-xl font-medium block transition-all duration-300 py-4 px-6 rounded-lg my-2 relative overflow-hidden group hover:bg-gray-50 ${navbarText ? 'text-inherit' : 'text-gray-900'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                  style={{ color: navbarText || undefined }}
+                >
+                  <span className="relative z-10 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Icon size={18} className="ml-2 opacity-80" />
+                      <span>{item.label}</span>
+                    </div>
+                  </span>
+                  <span className="absolute right-0 w-2 h-full bg-gray-300 opacity-0 group-hover:opacity-50 transition-all duration-500 transform -skew-x-12 translate-x-20 group-hover:translate-x-0"></span>
+                  <span className="absolute inset-0 bg-gray-100 opacity-0 group-hover:opacity-20 transition-all duration-500"></span>
+                </a>
+              ) : (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`text-xl font-medium block transition-all duration-300 py-4 px-6 rounded-lg my-2 relative overflow-hidden group ${active ? 'bg-gray-100 shadow-md' : 'hover:bg-gray-50'} ${navbarText ? 'text-inherit' : 'text-gray-900'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                  style={{ color: navbarText || undefined }}
+                >
+                  <span className="relative z-10 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Icon size={18} className="ml-2 opacity-80" />
+                      <span>{item.label}</span>
+                    </div>
+                    {active && <ChevronLeft size={16} className="mr-2" />}
+                  </span>
+                  <span className="absolute right-0 w-2 h-full bg-gray-300 opacity-0 group-hover:opacity-50 transition-all duration-500 transform -skew-x-12 translate-x-20 group-hover:translate-x-0"></span>
+                  <span className="absolute inset-0 bg-gray-100 opacity-0 group-hover:opacity-20 transition-all duration-500"></span>
+                </Link>
+              )
             );
           })}
         </div>

@@ -2452,8 +2452,10 @@ export default function Dashboard(props) {
                     <div className="row-grid row-2" style={{ marginTop: 16 }}>
                       <ColorInput label={editLang === 'ar' ? 'خلفية الهيدر' : 'Navbar Background'} value={(cfg.sections.navbar?.colors || {}).background || ''} onChange={(v) => setNavbarColor('background', v)} />
                       <ColorInput label={editLang === 'ar' ? 'نص الهيدر' : 'Navbar Text'} value={(cfg.sections.navbar?.colors || {}).text || ''} onChange={(v) => setNavbarColor('text', v)} required />
+                      <ColorInput label={editLang === 'ar' ? 'حدود الهيدر' : 'Navbar Border'} value={(cfg.sections.navbar?.colors || {}).border || ''} onChange={(v) => setNavbarColor('border', v)} />
                       <ColorInput label={editLang === 'ar' ? 'خلفية الفوتر' : 'Footer Background'} value={(cfg.sections.footer?.colors || {}).background || ''} onChange={(v) => setFooterColor('background', v)} />
                       <ColorInput label={editLang === 'ar' ? 'نص الفوتر' : 'Footer Text'} value={(cfg.sections.footer?.colors || {}).text || ''} onChange={(v) => setFooterColor('text', v)} required />
+                      <ColorInput label={editLang === 'ar' ? 'حدود الفوتر' : 'Footer Border'} value={(cfg.sections.footer?.colors || {}).border || ''} onChange={(v) => setFooterColor('border', v)} />
                     </div>
                   </div>
                 </>

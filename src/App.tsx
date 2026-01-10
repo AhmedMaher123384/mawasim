@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import Partners from './pages/Partners';
@@ -88,6 +89,8 @@ function SiteApp() {
             </svg>
           </button>
         </div>
+
+        <Footer />
       </div>
     </Router>
   );
