@@ -124,12 +124,8 @@ function Navbar() {
     color: computedText,
   };
 
-  const itemBase =
-    'inline-flex items-center px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2';
-
   return (
     <nav dir="rtl" className="fixed top-0 right-0 w-full z-50 relative" style={navStyle}>
-
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -162,47 +158,11 @@ function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-2">
-            {navItems.map((item) => {
-              if (item.kind === 'external') {
-                return (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    target={item.href.startsWith('http') ? '_blank' : undefined}
-                    rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
-                    className={itemBase}
-                    style={{
-                      color: computedText,
-                      borderBottom: `2px solid transparent`,
-                    }}
-                  >
-                    <span>{item.label}</span>
-                  </a>
-                );
-              }
-
-              const active = item.isActive;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={itemBase}
-                  style={{
-                    color: active ? navbarAccent : computedText,
-                    borderBottom: `2px solid ${active ? navbarAccent : 'transparent'}`,
-                  }}
-                >
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-300"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-200"
             aria-label={isMenuOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
+            aria-expanded={isMenuOpen ? 'true' : 'false'}
             style={{
               color: computedText,
               background: accentSoft,
@@ -214,39 +174,51 @@ function Navbar() {
         </div>
       </div>
 
-      {isMenuOpen ? (
-        <>
+      <div className={`fixed inset-0 z-[80] ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} dir="rtl">
+        <div
+          className={`absolute inset-0 bg-black/35 backdrop-blur-sm transition-opacity duration-200 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+
+        <aside
+          role="dialog"
+          aria-modal="true"
+          className={`absolute top-0 right-0 h-[100dvh] w-[88vw] max-w-[420px] overflow-y-auto bg-white transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          style={{
+            color: computedText,
+            boxShadow: '0 28px 90px rgba(2, 6, 23, 0.22)',
+          }}
+        >
           <div
-            className="fixed inset-0"
-            onClick={() => setIsMenuOpen(false)}
+            className="absolute top-0 right-0 h-full w-2"
             style={{
-              background: 'rgba(2, 6, 23, 0.42)',
-              zIndex: 40,
+              backgroundImage: `linear-gradient(to bottom, ${navbarAccent}, ${hexToRgba(navbarAccent, 0.55) || 'rgba(22, 163, 74, 0.55)'})`,
             }}
           />
-          <div
-            className="fixed top-0 right-0 h-[100dvh] w-[88vw] max-w-[360px] overflow-y-auto"
-            style={{
-              zIndex: 60,
-              backgroundColor: navbarBackground || '#ffffff',
-              color: computedText,
-              borderLeft: `1px solid ${computedBorder}`,
-              boxShadow: '0 24px 80px rgba(2, 6, 23, 0.22)',
-            }}
-          >
-            <div className="p-5 flex items-center justify-between gap-4">
+
+          <div className="px-5 pt-5 pb-4 border-b" style={{ borderColor: 'rgba(15, 23, 42, 0.08)' }}>
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-xl" style={{ background: accentSoft, border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}` }}>
+                <div
+                  className="p-2 rounded-xl"
+                  style={{
+                    background: accentSoft,
+                    border: `1px solid ${hexToRgba(navbarAccent, 0.18) || 'rgba(22, 163, 74, 0.18)'}`,
+                  }}
+                >
                   <img src={logoSrc} alt={siteTitle} className="h-10 w-auto object-contain" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-bold text-base truncate">{t(config?.site?.tabTitle) || siteTitle}</div>
+                  <div className="text-xs font-semibold" style={{ color: navbarAccent }}>
+                    {t({ ar: 'القائمة', en: 'Menu' })}
+                  </div>
+                  <div className="font-extrabold text-base truncate">{t(config?.site?.tabTitle) || siteTitle}</div>
                 </div>
               </div>
 
               <button
                 onClick={() => setIsMenuOpen(false)}
-                className="inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-200"
+                className="inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-colors duration-150"
                 aria-label="إغلاق القائمة"
                 style={{
                   color: computedText,
@@ -257,54 +229,68 @@ function Navbar() {
                 <X size={20} />
               </button>
             </div>
+          </div>
 
-            <div className="px-4 pb-6">
-              {navItems.map((item) => {
-                const active = item.kind === 'router' ? item.isActive : false;
-                const commonClass = 'w-full flex items-center justify-between gap-3 px-4 py-4 rounded-xl transition-colors duration-150';
-                const inner = <div className="font-medium truncate">{item.label}</div>;
+          <div className="p-4">
+            <div className="rounded-2xl border bg-gradient-to-br from-white via-white to-green-50/60 overflow-hidden" style={{ borderColor: 'rgba(15, 23, 42, 0.08)' }}>
+              <div className="p-2">
+                {navItems.map((item) => {
+                  const active = item.kind === 'router' ? item.isActive : false;
+                  const commonClass =
+                    'w-full flex items-center justify-between gap-3 px-4 py-4 rounded-xl transition-all duration-150';
 
-                const style: CSSProperties = {
-                  color: active ? navbarAccent : computedText,
-                  background: active ? accentSoft : 'transparent',
-                  border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.25) || 'rgba(22, 163, 74, 0.25)') : 'rgba(15, 23, 42, 0.08)'}`,
-                };
+                  const style: CSSProperties = {
+                    color: active ? '#065f46' : computedText,
+                    background: active ? (hexToRgba(navbarAccent, 0.10) || 'rgba(22, 163, 74, 0.10)') : 'transparent',
+                    border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.22) || 'rgba(22, 163, 74, 0.22)') : 'transparent'}`,
+                  };
 
-                if (item.kind === 'external') {
+                  const rightMark = (
+                    <span
+                      className="shrink-0 w-2.5 h-2.5 rounded-full"
+                      style={{ background: active ? navbarAccent : 'rgba(15, 23, 42, 0.12)' }}
+                    />
+                  );
+
+                  if (item.kind === 'external') {
+                    return (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        target={item.href.startsWith('http') ? '_blank' : undefined}
+                        rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                        className={commonClass}
+                        style={style}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <div className="font-semibold truncate">{item.label}</div>
+                        {rightMark}
+                      </a>
+                    );
+                  }
                   return (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      target={item.href.startsWith('http') ? '_blank' : undefined}
-                      rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                    <Link
+                      key={item.to}
+                      to={item.to}
                       className={commonClass}
                       style={style}
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      {inner}
-                    </a>
+                      <div className="font-semibold truncate">{item.label}</div>
+                      {rightMark}
+                    </Link>
                   );
-                }
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={commonClass}
-                    style={style}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {inner}
-                  </Link>
-                );
-              })}
-            </div>
+                })}
+              </div>
 
-            <div className="px-6 pb-8 text-center text-xs opacity-70">
-              {t(config?.site?.footerText) || 'مواسم الخدمات'}
+              <div className="px-5 py-4 border-t flex items-center justify-between gap-3" style={{ borderColor: 'rgba(15, 23, 42, 0.08)' }}>
+                <div className="text-xs opacity-70 truncate">{t(config?.site?.footerText) || 'مواسم الخدمات'}</div>
+                <div className="h-1 w-16 rounded-full" style={{ background: navbarAccent }} />
+              </div>
             </div>
           </div>
-        </>
-      ) : null}
+        </aside>
+      </div>
     </nav>
   );
 }
