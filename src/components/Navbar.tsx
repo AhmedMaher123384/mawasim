@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronLeft, Home, Users, Briefcase, PhoneCall } from 'lucide-react';
 import logo from '../assets/logo.png';
@@ -40,6 +41,31 @@ function Navbar() {
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, [navbarDisabled]);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname, location.hash]);
 
   if (navbarDisabled) return null;
 
@@ -135,12 +161,12 @@ function Navbar() {
   const logoSrc =
     typeof config?.site?.logoNavbar === 'string' && config.site.logoNavbar.trim() ? config.site.logoNavbar : logo;
 
-  const navStyle: React.CSSProperties = {
+  const navStyle: CSSProperties = {
     backgroundColor: computedBg,
     borderBottom: `1px solid ${computedBorder}`,
     color: computedText,
-    backdropFilter: navbarBackground ? undefined : 'blur(10px)',
-    WebkitBackdropFilter: navbarBackground ? undefined : 'blur(10px)',
+    backdropFilter: navbarBackground || isMenuOpen ? undefined : 'blur(10px)',
+    WebkitBackdropFilter: navbarBackground || isMenuOpen ? undefined : 'blur(10px)',
   };
 
   const itemBase =
@@ -239,119 +265,123 @@ function Navbar() {
         </div>
       </div>
 
-      <div
-        className={`fixed top-0 right-0 h-full w-[88vw] max-w-[360px] transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{
-          zIndex: 60,
-          backgroundColor: navbarBackground || '#ffffff',
-          color: computedText,
-          borderLeft: `1px solid ${computedBorder}`,
-        }}
-      >
-        <div
-          className="h-1 w-full"
-          style={{
-            backgroundImage: `linear-gradient(90deg, ${navbarAccent}, ${hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)'}, transparent)`,
-          }}
-        />
-
-        <div className="p-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 rounded-2xl" style={{ background: accentSoft, border: `1px solid ${accentSoft2}` }}>
-              <img
-                src={logoSrc}
-                alt={siteTitle}
-                className="h-10 w-auto object-contain"
-              />
-            </div>
-            <div className="min-w-0">
-              <div className="font-extrabold text-base truncate">{siteTitle}</div>
-              <div className="text-xs opacity-70 truncate">{t(config?.site?.tabTitle) || ''}</div>
-            </div>
-          </div>
-
-          <button
+      {isMenuOpen ? (
+        <>
+          <div
+            className="fixed inset-0"
             onClick={() => setIsMenuOpen(false)}
-            className="inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-300"
-            aria-label="إغلاق القائمة"
             style={{
+              background: 'rgba(2, 6, 23, 0.42)',
+              zIndex: 50,
+            }}
+          />
+          <div
+            className="fixed top-0 right-0 h-[100dvh] w-[88vw] max-w-[360px] overflow-y-auto"
+            style={{
+              zIndex: 60,
+              backgroundColor: navbarBackground || '#ffffff',
               color: computedText,
-              background: accentSoft,
-              border: `1px solid ${accentSoft2}`,
+              borderLeft: `1px solid ${computedBorder}`,
+              boxShadow: `0 30px 90px ${hexToRgba(navbarAccent, 0.22) || 'rgba(2, 6, 23, 0.22)'}`,
             }}
           >
-            <X size={20} />
-          </button>
-        </div>
+            <div
+              className="h-1 w-full"
+              style={{
+                backgroundImage: `linear-gradient(90deg, ${navbarAccent}, ${hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)'}, transparent)`,
+              }}
+            />
 
-        <div className="px-4 pb-6">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = item.kind === 'router' ? item.isActive : false;
-            const commonClass = 'w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl transition-all duration-300';
-            const inner = (
-              <>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: active ? accentSoft2 : (hexToRgba(navbarAccent, 0.08) || 'rgba(15, 23, 42, 0.06)'),
-                      border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.14) || 'rgba(15, 23, 42, 0.10)')}`,
-                    }}
-                  >
-                    <Icon size={18} />
-                  </div>
-                  <div className="font-bold truncate">{item.label}</div>
+            <div className="p-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-2xl" style={{ background: accentSoft, border: `1px solid ${accentSoft2}` }}>
+                  <img src={logoSrc} alt={siteTitle} className="h-10 w-auto object-contain" />
                 </div>
-                <ChevronLeft size={16} style={{ opacity: active ? 1 : 0.6 }} />
-              </>
-            );
+                <div className="min-w-0">
+                  <div className="font-extrabold text-base truncate">{siteTitle}</div>
+                  <div className="text-xs opacity-70 truncate">{t(config?.site?.tabTitle) || ''}</div>
+                </div>
+              </div>
 
-            const style: React.CSSProperties = {
-              color: computedText,
-              background: active ? accentSoft2 : 'transparent',
-              border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.12) || 'rgba(15, 23, 42, 0.10)')}`,
-              boxShadow: active ? `0 14px 35px ${hexToRgba(navbarAccent, 0.14) || 'rgba(22, 163, 74, 0.14)'}` : undefined,
-            };
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="inline-flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-200"
+                aria-label="إغلاق القائمة"
+                style={{
+                  color: computedText,
+                  background: accentSoft,
+                  border: `1px solid ${accentSoft2}`,
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-            if (item.kind === 'external') {
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  target={item.href.startsWith('http') ? '_blank' : undefined}
-                  rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
-                  className={commonClass}
-                  style={style}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {inner}
-                </a>
-              );
-            }
-            return (
-              <Link key={item.to} to={item.to} className={commonClass} style={style} onClick={() => setIsMenuOpen(false)}>
-                {inner}
-              </Link>
-            );
-          })}
-        </div>
+            <div className="px-4 pb-6">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = item.kind === 'router' ? item.isActive : false;
+                const commonClass = 'w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl transition-all duration-200';
+                const inner = (
+                  <>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: active ? accentSoft2 : (hexToRgba(navbarAccent, 0.08) || 'rgba(15, 23, 42, 0.06)'),
+                          border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.14) || 'rgba(15, 23, 42, 0.10)')}`,
+                        }}
+                      >
+                        <Icon size={18} />
+                      </div>
+                      <div className="font-bold truncate">{item.label}</div>
+                    </div>
+                    <ChevronLeft size={16} style={{ opacity: active ? 1 : 0.6 }} />
+                  </>
+                );
 
-        <div className="px-6 pb-8 text-center text-xs opacity-70">
-          {t(config?.site?.footerText) || 'مواسم الخدمات'}
-        </div>
-      </div>
+                const style: CSSProperties = {
+                  color: computedText,
+                  background: active ? accentSoft2 : 'transparent',
+                  border: `1px solid ${active ? (hexToRgba(navbarAccent, 0.35) || 'rgba(22, 163, 74, 0.35)') : (hexToRgba(navbarAccent, 0.12) || 'rgba(15, 23, 42, 0.10)')}`,
+                  boxShadow: active ? `0 14px 35px ${hexToRgba(navbarAccent, 0.14) || 'rgba(22, 163, 74, 0.14)'}` : undefined,
+                };
 
-      {isMenuOpen && (
-        <div
-          className="fixed inset-0 transition-opacity duration-300"
-          onClick={() => setIsMenuOpen(false)}
-          style={{
-            background: 'rgba(2, 6, 23, 0.38)',
-            zIndex: 50,
-          }}
-        />
-      )}
+                if (item.kind === 'external') {
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      target={item.href.startsWith('http') ? '_blank' : undefined}
+                      rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                      className={commonClass}
+                      style={style}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {inner}
+                    </a>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={commonClass}
+                    style={style}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {inner}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="px-6 pb-8 text-center text-xs opacity-70">
+              {t(config?.site?.footerText) || 'مواسم الخدمات'}
+            </div>
+          </div>
+        </>
+      ) : null}
     </nav>
   );
 }

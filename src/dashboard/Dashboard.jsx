@@ -779,6 +779,123 @@ export default function Dashboard(props) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, message: '' });
   const [serviceDetailsModal, setServiceDetailsModal] = useState({ isOpen: false, index: -1 });
 
+  const DASH_AUTH_KEY = 'mw_dashboard_auth_v1';
+  const [isAuthed, setIsAuthed] = useState(() => {
+    try {
+      return window.sessionStorage.getItem(DASH_AUTH_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const logout = () => {
+    try {
+      window.sessionStorage.removeItem(DASH_AUTH_KEY);
+    } catch {}
+    setIsAuthed(false);
+    window.location.hash = '#';
+  };
+
+  const onSubmitLogin = (e) => {
+    e.preventDefault();
+    const u = String(loginUsername || '').trim();
+    const p = String(loginPassword || '');
+    if (u === 'admin' && p === '55555') {
+      try {
+        window.sessionStorage.setItem(DASH_AUTH_KEY, '1');
+      } catch {}
+      setIsAuthed(true);
+      setLoginError('');
+      setLoginPassword('');
+      return;
+    }
+    setLoginError('بيانات الدخول غير صحيحة');
+  };
+
+  if (!isAuthed) {
+    return (
+      <div dir="rtl">
+        <style>{`
+          html, body { height: 100%; }
+          body { margin: 0; font-family: 'Cairo', system-ui, sans-serif; background: radial-gradient(1200px 700px at 20% 10%, rgba(22,163,74,0.25), transparent 55%), radial-gradient(900px 600px at 90% 20%, rgba(15,118,110,0.20), transparent 55%), linear-gradient(180deg, #ffffff, #f5f7fb); }
+          .dash-login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+          .dash-login-card { width: min(420px, 100%); background: rgba(255,255,255,0.86); border: 1px solid rgba(15,23,42,0.08); border-radius: 18px; box-shadow: 0 20px 70px rgba(2,6,23,0.12); overflow: hidden; }
+          .dash-login-bar { height: 6px; background: linear-gradient(90deg, #16a34a, #0f766e, transparent); }
+          .dash-login-body { padding: 22px; }
+          .dash-login-title { font-size: 1.2rem; font-weight: 800; color: #0f172a; letter-spacing: 0.2px; }
+          .dash-login-sub { margin-top: 6px; font-size: 0.92rem; color: rgba(15,23,42,0.70); }
+          .dash-login-grid { display: grid; gap: 12px; margin-top: 16px; }
+          .dash-login-field label { display: block; font-size: 0.85rem; font-weight: 700; color: rgba(15,23,42,0.70); margin-bottom: 6px; }
+          .dash-login-input { width: 100%; height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: rgba(255,255,255,0.9); outline: none; transition: box-shadow 140ms ease, border-color 140ms ease; }
+          .dash-login-input:focus { border-color: rgba(22,163,74,0.55); box-shadow: 0 0 0 4px rgba(22,163,74,0.14); }
+          .dash-login-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+          .dash-login-btn { height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: rgba(255,255,255,0.85); font-weight: 800; cursor: pointer; }
+          .dash-login-primary { height: 46px; width: 100%; border: 0; border-radius: 14px; background: linear-gradient(135deg, #16a34a, #0f766e); color: white; font-weight: 900; cursor: pointer; box-shadow: 0 14px 40px rgba(22,163,74,0.22); transition: transform 120ms ease, box-shadow 120ms ease; }
+          .dash-login-primary:hover { transform: translateY(-1px); box-shadow: 0 18px 52px rgba(22,163,74,0.28); }
+          .dash-login-error { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(198,40,40,0.08); border: 1px solid rgba(198,40,40,0.18); color: rgba(127,29,29,0.95); font-weight: 700; font-size: 0.9rem; }
+          .dash-login-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
+          .dash-login-link { border: 0; background: transparent; color: rgba(15,23,42,0.70); font-weight: 800; cursor: pointer; padding: 10px 0; }
+        `}</style>
+        <div className="dash-login-wrap">
+          <div className="dash-login-card">
+            <div className="dash-login-bar" />
+            <div className="dash-login-body">
+              <div className="dash-login-title">تسجيل دخول لوحة التحكم</div>
+              <div className="dash-login-sub">ادخل بيانات الدخول للوصول إلى إعدادات الموقع</div>
+
+              <form onSubmit={onSubmitLogin} className="dash-login-grid">
+                <div className="dash-login-field">
+                  <label>اسم المستخدم</label>
+                  <input
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                    className="dash-login-input"
+                    autoComplete="username"
+                    placeholder="admin"
+                  />
+                </div>
+
+                <div className="dash-login-row">
+                  <div className="dash-login-field">
+                    <label>كلمة المرور</label>
+                    <input
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className="dash-login-input"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      placeholder="•••••"
+                    />
+                  </div>
+                  <button type="button" className="dash-login-btn" onClick={() => setShowPassword((v) => !v)}>
+                    {showPassword ? 'إخفاء' : 'إظهار'}
+                  </button>
+                </div>
+
+                <button type="submit" className="dash-login-primary">دخول</button>
+
+                {loginError ? <div className="dash-login-error">{loginError}</div> : null}
+              </form>
+
+              <div className="dash-login-actions">
+                <button className="dash-login-link" onClick={() => { window.location.hash = '#'; }}>
+                  عرض الموقع
+                </button>
+                <button className="dash-login-link" onClick={() => { setLoginError(''); setLoginPassword(''); }}>
+                  مسح
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const dir = editLang === 'ar' ? 'rtl' : 'ltr';
   const previewRef = useRef(null);
 
@@ -2315,6 +2432,9 @@ export default function Dashboard(props) {
               </div>
               <button className="btn btn-outline" onClick={() => { window.location.hash = '#'; }}>
                 عرض الموقع
+              </button>
+              <button className="btn btn-ghost" onClick={logout}>
+                تسجيل خروج
               </button>
               <button className="btn btn-primary" onClick={handleSaveAndRefresh}>حفظ</button>
               <label className="chip">
