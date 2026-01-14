@@ -258,6 +258,13 @@ function ServiceDetail() {
   };
 
   const takeString = (v: unknown): string => (typeof v === 'string' && v.trim() ? v.trim() : '');
+  const normalizeUrl = (v: unknown): string => {
+    const s = takeString(v);
+    if (!s) return '';
+    if (/^(https?:|data:|\/)/.test(s)) return s;
+    if (s.startsWith('./')) return `/${s.slice(2)}`;
+    return `/${s}`;
+  };
   const cfgItemsUnknown = config?.sections?.services?.items as unknown;
   const cfgItems: ServiceItemConfig[] = Array.isArray(cfgItemsUnknown) ? (cfgItemsUnknown as ServiceItemConfig[]) : [];
   const cfgItem = idNum > 0 ? cfgItems[idNum - 1] : undefined;
@@ -269,15 +276,15 @@ function ServiceDetail() {
     ? (t(details.longDescription) || pickText(details.longDescription) || fallbackService?.longDescription || '')
     : (fallbackService?.longDescription || '');
 
-  const heroFromDetails = takeString(details?.heroImage);
-  const heroFromCard = takeString(cfgItem?.image);
+  const heroFromDetails = normalizeUrl(details?.heroImage);
+  const heroFromCard = normalizeUrl(cfgItem?.image);
   const heroBackground = heroFromDetails || heroFromCard || (fallbackService?.image ? String(fallbackService.image) : '');
 
   const includesRaw = Array.isArray(details?.includes) ? (details?.includes as ServiceIncludeConfigItem[]) : [];
   const includes = includesRaw
     .map((it) => ({
       title: it?.title ? (t(it.title) || pickText(it.title) || '') : '',
-      image: takeString(it?.image),
+      image: normalizeUrl(it?.image),
     }))
     .filter((it) => it.title || it.image);
   const fallbackIncludes = (fallbackService?.subTitles || []).map((it) => ({ title: it.title, image: String(it.image) }));

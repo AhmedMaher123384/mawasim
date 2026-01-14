@@ -2787,7 +2787,7 @@ export default function Dashboard(props) {
                   onClick={() => {
                     const page = ensurePage('page_partners');
                     page.items = Array.isArray(page.items) ? page.items : [];
-                    page.items.push({ name: { en: '', ar: '' }, logo: '', link: '' });
+                    page.items.push({ name: { en: '', ar: '' }, description: { en: '', ar: '' }, image: '' });
                     setConfig(cfg);
                   }}
                 >
@@ -2807,7 +2807,7 @@ export default function Dashboard(props) {
                         onChange={(v) => {
                           const p = ensurePage('page_partners');
                           p.items = Array.isArray(p.items) ? p.items : [];
-                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, logo: '', link: '' };
+                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, description: { en: '', ar: '' }, image: '' };
                           p.items[i].name = p.items[i].name && typeof p.items[i].name === 'object' ? p.items[i].name : { en: '', ar: '' };
                           p.items[i].name[editLang] = v;
                           setConfig(cfg);
@@ -2817,30 +2817,32 @@ export default function Dashboard(props) {
                         required={false}
                       />
                       <URLInput
-                        label={editLang === 'ar' ? 'شعار/صورة' : 'Logo/Image'}
-                        value={String(it?.logo || '')}
+                        label={editLang === 'ar' ? 'الصورة' : 'Image'}
+                        value={String(it?.image || it?.logo || '')}
                         onChange={(v) => {
                           const p = ensurePage('page_partners');
                           p.items = Array.isArray(p.items) ? p.items : [];
-                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, logo: '', link: '' };
-                          p.items[i].logo = v;
+                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, description: { en: '', ar: '' }, image: '' };
+                          p.items[i].image = v;
                           setConfig(cfg);
                         }}
                         placeholder={editLang === 'ar' ? 'رابط صورة أو ارفع' : 'Image URL or upload'}
                         accept="image/*"
                       />
-                      <URLInput
-                        label={editLang === 'ar' ? 'رابط (اختياري)' : 'Link (optional)'}
-                        value={String(it?.link || '')}
+                      <TextArea
+                        label={editLang === 'ar' ? 'الوصف' : 'Description'}
+                        value={(it?.description?.[editLang] || '')}
                         onChange={(v) => {
                           const p = ensurePage('page_partners');
                           p.items = Array.isArray(p.items) ? p.items : [];
-                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, logo: '', link: '' };
-                          p.items[i].link = v;
+                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, description: { en: '', ar: '' }, image: '' };
+                          p.items[i].description = p.items[i].description && typeof p.items[i].description === 'object' ? p.items[i].description : { en: '', ar: '' };
+                          p.items[i].description[editLang] = v;
                           setConfig(cfg);
                         }}
-                        placeholder="https://..."
-                        dir="ltr"
+                        dir={dir}
+                        placeholder={editLang === 'ar' ? 'وصف مختصر' : 'Short description'}
+                        rows={3}
                       />
                       <button
                         type="button"
@@ -2885,7 +2887,7 @@ export default function Dashboard(props) {
                   onClick={() => {
                     const page = ensurePage('page_media');
                     page.items = Array.isArray(page.items) ? page.items : [];
-                    page.items.push({ type: 'image', url: '', title: { en: '', ar: '' } });
+                    page.items.push({ image: '', description: { en: '', ar: '' } });
                     setConfig(cfg);
                   }}
                 >
@@ -2898,49 +2900,34 @@ export default function Dashboard(props) {
                   const page = ensurePage('page_media');
                   const items = Array.isArray(page.items) ? page.items : [];
                   return items.map((it, i) => (
-                    <div key={i} className="row-cta" style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr auto', gap: 10, alignItems: 'center' }}>
-                      <div className="form-group">
-                        <label>{editLang === 'ar' ? 'النوع' : 'Type'}</label>
-                        <select
-                          value={String(it?.type || 'image')}
-                          onChange={(e) => {
-                            const p = ensurePage('page_media');
-                            p.items = Array.isArray(p.items) ? p.items : [];
-                            p.items[i] = p.items[i] || { type: 'image', url: '', title: { en: '', ar: '' } };
-                            p.items[i].type = e.target.value;
-                            setConfig(cfg);
-                          }}
-                        >
-                          <option value="image">{editLang === 'ar' ? 'صورة' : 'Image'}</option>
-                          <option value="video">{editLang === 'ar' ? 'فيديو' : 'Video'}</option>
-                        </select>
-                      </div>
+                    <div key={i} className="row-cta" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'center' }}>
                       <URLInput
-                        label={editLang === 'ar' ? 'الرابط' : 'URL'}
-                        value={String(it?.url || '')}
+                        label={editLang === 'ar' ? 'الصورة' : 'Image'}
+                        value={String(it?.image || it?.url || '')}
                         onChange={(v) => {
                           const p = ensurePage('page_media');
                           p.items = Array.isArray(p.items) ? p.items : [];
-                          p.items[i] = p.items[i] || { type: 'image', url: '', title: { en: '', ar: '' } };
-                          p.items[i].url = v;
+                          p.items[i] = p.items[i] || { image: '', description: { en: '', ar: '' } };
+                          p.items[i].image = v;
                           setConfig(cfg);
                         }}
-                        placeholder={editLang === 'ar' ? 'رابط أو رفع' : 'URL or upload'}
-                        accept="image/*,video/*"
+                        placeholder={editLang === 'ar' ? 'رابط صورة أو رفع' : 'Image URL or upload'}
+                        accept="image/*"
                       />
-                      <TextInput
-                        label={editLang === 'ar' ? 'العنوان' : 'Title'}
-                        value={(it?.title?.[editLang] || '')}
+                      <TextArea
+                        label={editLang === 'ar' ? 'الوصف' : 'Description'}
+                        value={(it?.description?.[editLang] || '')}
                         onChange={(v) => {
                           const p = ensurePage('page_media');
                           p.items = Array.isArray(p.items) ? p.items : [];
-                          p.items[i] = p.items[i] || { type: 'image', url: '', title: { en: '', ar: '' } };
-                          p.items[i].title = p.items[i].title && typeof p.items[i].title === 'object' ? p.items[i].title : { en: '', ar: '' };
-                          p.items[i].title[editLang] = v;
+                          p.items[i] = p.items[i] || { image: '', description: { en: '', ar: '' } };
+                          p.items[i].description = p.items[i].description && typeof p.items[i].description === 'object' ? p.items[i].description : { en: '', ar: '' };
+                          p.items[i].description[editLang] = v;
                           setConfig(cfg);
                         }}
                         dir={dir}
-                        placeholder={editLang === 'ar' ? 'مثال: مشروع ١' : 'e.g., Project 1'}
+                        placeholder={editLang === 'ar' ? 'وصف مختصر' : 'Short description'}
+                        rows={3}
                       />
                       <button
                         type="button"
