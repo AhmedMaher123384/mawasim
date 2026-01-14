@@ -83,7 +83,9 @@ type Site = {
   [key: string]: unknown;
 };
 
-type SiteConfig = { site?: Site; sections?: Sections; theme?: Theme; [key: string]: unknown };
+type Pages = { [key: string]: unknown };
+
+type SiteConfig = { site?: Site; sections?: Sections; theme?: Theme; pages?: Pages; [key: string]: unknown };
 
 type ConfigContextValue = {
   config: SiteConfig | null;

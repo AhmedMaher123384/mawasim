@@ -243,7 +243,7 @@ const UploadImageButton = ({ onUpload, accept = 'image/*' }) => {
         onClick={() => fileInputRef.current?.click()}
         title={accept.includes('video') && !accept.includes('image') ? 'رفع فيديو' : accept.includes('video') && accept.includes('image') ? 'رفع ملف' : 'رفع صورة'}
       >
-        📤 رفع
+        رفع
       </button>
       <input
         type="file"
@@ -766,7 +766,7 @@ export default function Dashboard(props) {
   const { config, setConfig, updateConfig, t, lang, setLang, saveToBrowser, lastSavedAt, unsaved } = useConfig();
   const [editLang, setEditLang] = useState('ar');
   const [active, setActive] = useState('theme');
-  const [activeGroup, setActiveGroup] = useState('appearance'); // appearance | main | pages | others
+  const [activeGroup, setActiveGroup] = useState('appearance'); // appearance | main | pages | others | data
   const [appearanceSub, setAppearanceSub] = useState('colors'); // colors | fonts
   const [mainSub, setMainSub] = useState('navbar'); // navbar | hero | footer | layout
   const [pagesSub, setPagesSub] = useState('page_about'); // page_about | page_partners | page_media | page_contact
@@ -1881,11 +1881,24 @@ export default function Dashboard(props) {
         }
 
         .btn-upload {
-          background: #f0f0f0;
+          background: white;
           border: 1px dashed var(--border);
-          padding: 8px 12px;
-          border-radius: var(--radius-sm);
+          padding: 0 12px;
+          border-radius: 10px;
           font-size: 0.85rem;
+          height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
+          cursor: pointer;
+          color: var(--gray);
+          transition: var(--transition);
+        }
+        .btn-upload:hover {
+          border-color: var(--burgundy);
+          color: var(--burgundy);
+          background: rgba(109, 0, 25, 0.03);
         }
 
         /* Rows & Grids */
@@ -1922,6 +1935,11 @@ export default function Dashboard(props) {
         .url-input-wrapper {
           display: flex;
           gap: 10px;
+          align-items: center;
+        }
+        .url-input-wrapper input[type="url"] {
+          flex: 1;
+          min-width: 0;
         }
 
         /* Preview */
@@ -2303,110 +2321,40 @@ export default function Dashboard(props) {
             <div className="dashboard-logo">لوحة التحكم</div>
           </div>
           <nav className="dashboard-nav">
-            <div className="nav-section">{editLang === 'ar' ? 'التبويبات' : 'Tabs'}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: showPagesTab ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: 8 }}>
+            <button
+              className={`nav-item ${activeGroup === 'appearance' ? 'active' : ''}`}
+              onClick={() => { setActiveGroup('appearance'); setMobileMenuOpen(false); setActive('theme'); }}
+            >
+              {editLang === 'ar' ? 'المظهر' : 'Appearance'}
+            </button>
+            <button
+              className={`nav-item ${activeGroup === 'main' ? 'active' : ''}`}
+              onClick={() => { setActiveGroup('main'); setMobileMenuOpen(false); setActive(mainSub); }}
+            >
+              {editLang === 'ar' ? 'الأقسام الرئيسية' : 'Main Sections'}
+            </button>
+            {showPagesTab && (
               <button
-                className={`nav-item ${activeGroup === 'appearance' ? 'active' : ''}`}
-                onClick={() => { setActiveGroup('appearance'); setMobileMenuOpen(false); setActive('theme'); }}
+                className={`nav-item ${activeGroup === 'pages' ? 'active' : ''}`}
+                onClick={() => { setActiveGroup('pages'); setMobileMenuOpen(false); setActive(pagesSub); }}
               >
-                {editLang === 'ar' ? 'المظهر' : 'Appearance'}
+                {editLang === 'ar' ? 'الصفحات' : 'Pages'}
               </button>
-              <button
-                className={`nav-item ${activeGroup === 'main' ? 'active' : ''}`}
-                onClick={() => { setActiveGroup('main'); setMobileMenuOpen(false); setActive(mainSub); }}
-              >
-                {editLang === 'ar' ? 'الأقسام الرئيسية' : 'Main Sections'}
-              </button>
-              {showPagesTab && (
-                <button
-                  className={`nav-item ${activeGroup === 'pages' ? 'active' : ''}`}
-                  onClick={() => { setActiveGroup('pages'); setMobileMenuOpen(false); setActive(pagesSub); }}
-                >
-                  {editLang === 'ar' ? 'الصفحات' : 'Pages'}
-                </button>
-              )}
-              <button
-                className={`nav-item ${activeGroup === 'others' ? 'active' : ''}`}
-                onClick={() => { setActiveGroup('others'); setMobileMenuOpen(false); }}
-              >
-                {editLang === 'ar' ? 'باقي الأقسام' : 'Other Sections'}
-              </button>
-            </div>
-
-            {activeGroup === 'appearance' && (
-              <>
-                <div className="nav-section">{editLang === 'ar' ? 'المظهر' : 'Appearance'}</div>
-                <button
-                  className={`nav-item ${appearanceSub === 'colors' ? 'active' : ''}`}
-                  onClick={() => { setAppearanceSub('colors'); setActive('theme'); setMobileMenuOpen(false); }}
-                >
-                  {editLang === 'ar' ? 'ألوان الثيم' : 'Theme Colors'}
-                </button>
-                <button
-                  className={`nav-item ${appearanceSub === 'fonts' ? 'active' : ''}`}
-                  onClick={() => { setAppearanceSub('fonts'); setActive('theme'); setMobileMenuOpen(false); }}
-                >
-                  {editLang === 'ar' ? 'خطوط الثيم' : 'Theme Fonts'}
-                </button>
-              </>
             )}
-
-            {activeGroup === 'main' && (
-              <>
-                <div className="nav-section">{editLang === 'ar' ? 'الأقسام الرئيسية' : 'Main Sections'}</div>
-                <button className={`nav-item ${active === 'general' ? 'active' : ''}`} onClick={() => { setMainSub('general'); setActive('general'); setMobileMenuOpen(false); }}>{labelsForLang?.general}</button>
-                <button className={`nav-item ${active === 'branding' ? 'active' : ''}`} onClick={() => { setMainSub('branding'); setActive('branding'); setMobileMenuOpen(false); }}>{labelsForLang?.branding}</button>
-                <button className={`nav-item ${active === 'navbar' ? 'active' : ''}`} onClick={() => { setMainSub('navbar'); setActive('navbar'); setMobileMenuOpen(false); }}>{editLang === 'ar' ? 'النافبار' : 'Navbar'}</button>
-                <button className={`nav-item ${active === 'hero' ? 'active' : ''}`} onClick={() => { setMainSub('hero'); setActive('hero'); setMobileMenuOpen(false); }}>{editLang === 'ar' ? 'الهيرو' : 'Hero'}</button>
-                <button className={`nav-item ${active === 'footer' ? 'active' : ''}`} onClick={() => { setMainSub('footer'); setActive('footer'); setMobileMenuOpen(false); }}>{editLang === 'ar' ? 'الفوتر' : 'Footer'}</button>
-                <button className={`nav-item ${active === 'layout' ? 'active' : ''}`} onClick={() => { setMainSub('layout'); setActive('layout'); setMobileMenuOpen(false); }}>{editLang === 'ar' ? 'ترتيب الأقسام' : 'Sections Order'}</button>
-              </>
-            )}
-
-            {showPagesTab && activeGroup === 'pages' && (
-              <>
-                <div className="nav-section">{editLang === 'ar' ? 'الصفحات' : 'Pages'}</div>
-                {(() => {
-                  const menu = Array.isArray(cfg?.site?.menu) ? cfg.site.menu : [];
-                  const hrefs = new Set(menu.map((m) => String(m?.href || '')));
-                  const pages = [
-                    { href: '/about', key: 'page_about' },
-                    { href: '/partners', key: 'page_partners' },
-                    { href: '/media', key: 'page_media' },
-                    { href: '/contact', key: 'page_contact' },
-                  ].filter((p) => hrefs.has(p.href));
-                  return pages.map((p) => (
-                    <button
-                      key={p.key}
-                      className={`nav-item ${active === p.key ? 'active' : ''}`}
-                      onClick={() => { setPagesSub(p.key); setActive(p.key); setMobileMenuOpen(false); }}
-                    >
-                      {labelsForLang?.[p.key] || p.key}
-                    </button>
-                  ));
-                })()}
-              </>
-            )}
-
-            {activeGroup === 'others' && (
-              <>
-                <div className="nav-section">{editLang === 'ar' ? 'باقي الأقسام' : 'Other Sections'}</div>
-                {HOME_SECTIONS.filter((k) => k !== 'hero').concat(showCustomBlocks ? ['custom'] : []).map((key) => (
-                  <button
-                    key={key}
-                    className={`nav-item ${active === key ? 'active' : ''}`}
-                    onClick={() => { setActive(key); setMobileMenuOpen(false); }}
-                  >
-                    {labelsForLang?.[key] || key}
-                  </button>
-                ))}
-              </>
-            )}
-
-            <div className="nav-section">{editLang === 'ar' ? 'البيانات' : 'Data'}</div>
+            <button
+              className={`nav-item ${activeGroup === 'others' ? 'active' : ''}`}
+              onClick={() => {
+                const firstOther = HOME_SECTIONS.filter((k) => k !== 'hero')[0] || 'services';
+                setActiveGroup('others');
+                setMobileMenuOpen(false);
+                setActive(firstOther);
+              }}
+            >
+              {editLang === 'ar' ? 'باقي الأقسام' : 'Other Sections'}
+            </button>
             <button
               className={`nav-item ${active === 'data' ? 'active' : ''}`}
-              onClick={() => { setActive('data'); setMobileMenuOpen(false); }}
+              onClick={() => { setActiveGroup('data'); setMobileMenuOpen(false); setActive('data'); }}
             >
               {editLang === 'ar' ? 'حفظ / تصدير' : 'Save / Export'}
             </button>
@@ -2455,6 +2403,106 @@ export default function Dashboard(props) {
               </button>
             </div>
           </div>
+
+          {activeGroup === 'appearance' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'المظهر' : 'Appearance'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'اختيار قسم داخل المظهر' : 'Pick a section within appearance'}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button
+                  className={`btn ${appearanceSub === 'colors' ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => { setAppearanceSub('colors'); setActive('theme'); }}
+                >
+                  {editLang === 'ar' ? 'ألوان الثيم' : 'Theme Colors'}
+                </button>
+                <button
+                  className={`btn ${appearanceSub === 'fonts' ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => { setAppearanceSub('fonts'); setActive('theme'); }}
+                >
+                  {editLang === 'ar' ? 'خطوط الثيم' : 'Theme Fonts'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeGroup === 'main' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'الأقسام الرئيسية' : 'Main Sections'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'اختيار قسم للتحكم فيه' : 'Pick a section to edit'}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {[
+                  { key: 'general', label: labelsForLang?.general || 'general' },
+                  { key: 'branding', label: labelsForLang?.branding || 'branding' },
+                  { key: 'navbar', label: editLang === 'ar' ? 'النافبار' : 'Navbar' },
+                  { key: 'hero', label: editLang === 'ar' ? 'الهيرو' : 'Hero' },
+                  { key: 'footer', label: editLang === 'ar' ? 'الفوتر' : 'Footer' },
+                  { key: 'layout', label: editLang === 'ar' ? 'ترتيب الأقسام' : 'Sections Order' },
+                ].map((it) => (
+                  <button
+                    key={it.key}
+                    className={`btn ${active === it.key ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => { setMainSub(it.key); setActive(it.key); }}
+                  >
+                    {it.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeGroup === 'pages' && showPagesTab && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'الصفحات' : 'Pages'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'اختيار صفحة للتحكم في محتواها' : 'Pick a page to edit'}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {(() => {
+                  const menu = Array.isArray(cfg?.site?.menu) ? cfg.site.menu : [];
+                  const hrefs = new Set(menu.map((m) => String(m?.href || '')));
+                  const pages = [
+                    { href: '/about', key: 'page_about' },
+                    { href: '/partners', key: 'page_partners' },
+                    { href: '/media', key: 'page_media' },
+                    { href: '/contact', key: 'page_contact' },
+                  ].filter((p) => hrefs.has(p.href));
+                  return pages.map((p) => (
+                    <button
+                      key={p.key}
+                      className={`btn ${active === p.key ? 'btn-primary' : 'btn-outline'}`}
+                      onClick={() => { setPagesSub(p.key); setActive(p.key); }}
+                    >
+                      {labelsForLang?.[p.key] || p.key}
+                    </button>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+
+          {activeGroup === 'others' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'باقي الأقسام' : 'Other Sections'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'اختيار قسم للتحكم فيه' : 'Pick a section to edit'}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {HOME_SECTIONS.filter((k) => k !== 'hero').concat(showCustomBlocks ? ['custom'] : []).map((key) => (
+                  <button
+                    key={key}
+                    className={`btn ${active === key ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setActive(key)}
+                  >
+                    {labelsForLang?.[key] || key}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* General Settings Tab */}
           {active === 'general' && (
@@ -2662,6 +2710,351 @@ export default function Dashboard(props) {
                 </div>
               )}
             </>
+          )}
+
+          {active === 'page_about' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'صفحة: من نحن' : 'Page: About'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'العنوان، أول فقرة، والصورة' : 'Heading, first paragraph, and image'}</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+                <input
+                  type="checkbox"
+                  checked={cfg.sections.about.enabled}
+                  onChange={(e) => setSectionEnabled('about', e.target.checked)}
+                  id="page-about-enabled"
+                />
+                <label htmlFor="page-about-enabled" className="panel-desc">مفعّل</label>
+              </div>
+
+              <div className="form-grid">
+                <TextInput
+                  label="العنوان"
+                  value={cfg.sections.about.heading[editLang]}
+                  onChange={(v) => setSectionText('about', 'heading', v)}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'من نحن' : 'About'}
+                  required
+                />
+                <TextArea
+                  label={editLang === 'ar' ? 'الفقرة الأولى' : 'First paragraph'}
+                  value={(cfg.sections.about.paragraphs?.[0]?.[editLang] || '')}
+                  onChange={(v) => {
+                    ensureSection('about');
+                    cfg.sections.about.paragraphs = Array.isArray(cfg.sections.about.paragraphs) && cfg.sections.about.paragraphs.length
+                      ? cfg.sections.about.paragraphs
+                      : [{ en: '', ar: '' }];
+                    cfg.sections.about.paragraphs[0][editLang] = v;
+                    setConfig(cfg);
+                  }}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'اكتب نصًا...' : 'Write text...'}
+                  rows={4}
+                />
+                <URLInput
+                  label={editLang === 'ar' ? 'الصورة' : 'Image'}
+                  value={cfg.sections.about.image || ''}
+                  onChange={(v) => setAboutImage(v)}
+                  placeholder={editLang === 'ar' ? 'رابط صورة أو ارفع ملفًا' : 'Image URL or upload'}
+                />
+              </div>
+            </div>
+          )}
+
+          {active === 'page_partners' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'صفحة: شركاء النجاح' : 'Page: Partners'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'العنوان وقائمة الشركاء' : 'Title and partners list'}</div>
+              </div>
+
+              <TextInput
+                label={editLang === 'ar' ? 'عنوان الصفحة' : 'Page title'}
+                value={(ensurePage('page_partners').title?.[editLang] || '')}
+                onChange={(v) => setPageText('page_partners', 'title', v)}
+                dir={dir}
+                placeholder={editLang === 'ar' ? 'شركاء النجاح' : 'Partners'}
+                required={false}
+              />
+
+              <div className="panel-header" style={{ marginTop: 20 }}>
+                <div className="panel-title">{editLang === 'ar' ? 'الشركاء' : 'Partners'}</div>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    const page = ensurePage('page_partners');
+                    page.items = Array.isArray(page.items) ? page.items : [];
+                    page.items.push({ name: { en: '', ar: '' }, logo: '', link: '' });
+                    setConfig(cfg);
+                  }}
+                >
+                  {editLang === 'ar' ? 'إضافة شريك' : 'Add partner'}
+                </button>
+              </div>
+
+              <div className="row-grid">
+                {(() => {
+                  const page = ensurePage('page_partners');
+                  const items = Array.isArray(page.items) ? page.items : [];
+                  return items.map((it, i) => (
+                    <div key={i} className="row-cta" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 10, alignItems: 'center' }}>
+                      <TextInput
+                        label={editLang === 'ar' ? 'الاسم' : 'Name'}
+                        value={(it?.name?.[editLang] || '')}
+                        onChange={(v) => {
+                          const p = ensurePage('page_partners');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, logo: '', link: '' };
+                          p.items[i].name = p.items[i].name && typeof p.items[i].name === 'object' ? p.items[i].name : { en: '', ar: '' };
+                          p.items[i].name[editLang] = v;
+                          setConfig(cfg);
+                        }}
+                        dir={dir}
+                        placeholder={editLang === 'ar' ? 'مثال: شريك ١' : 'e.g., Partner 1'}
+                        required={false}
+                      />
+                      <URLInput
+                        label={editLang === 'ar' ? 'شعار/صورة' : 'Logo/Image'}
+                        value={String(it?.logo || '')}
+                        onChange={(v) => {
+                          const p = ensurePage('page_partners');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, logo: '', link: '' };
+                          p.items[i].logo = v;
+                          setConfig(cfg);
+                        }}
+                        placeholder={editLang === 'ar' ? 'رابط صورة أو ارفع' : 'Image URL or upload'}
+                        accept="image/*"
+                      />
+                      <URLInput
+                        label={editLang === 'ar' ? 'رابط (اختياري)' : 'Link (optional)'}
+                        value={String(it?.link || '')}
+                        onChange={(v) => {
+                          const p = ensurePage('page_partners');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items[i] = p.items[i] || { name: { en: '', ar: '' }, logo: '', link: '' };
+                          p.items[i].link = v;
+                          setConfig(cfg);
+                        }}
+                        placeholder="https://..."
+                        dir="ltr"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => safeDelete(() => {
+                          const p = ensurePage('page_partners');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items.splice(i, 1);
+                          setConfig(cfg);
+                        }, editLang === 'ar' ? 'هل أنت متأكد من حذف هذا الشريك؟' : 'Delete this partner?')}
+                      >
+                        {editLang === 'ar' ? 'حذف' : 'Delete'}
+                      </button>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+
+          {active === 'page_media' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'صفحة: الوسائط' : 'Page: Media'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'العنوان وقائمة الوسائط' : 'Title and media items'}</div>
+              </div>
+
+              <TextInput
+                label={editLang === 'ar' ? 'عنوان الصفحة' : 'Page title'}
+                value={(ensurePage('page_media').title?.[editLang] || '')}
+                onChange={(v) => setPageText('page_media', 'title', v)}
+                dir={dir}
+                placeholder={editLang === 'ar' ? 'مكتبة الصور والفيديوهات' : 'Media Library'}
+                required={false}
+              />
+
+              <div className="panel-header" style={{ marginTop: 20 }}>
+                <div className="panel-title">{editLang === 'ar' ? 'العناصر' : 'Items'}</div>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    const page = ensurePage('page_media');
+                    page.items = Array.isArray(page.items) ? page.items : [];
+                    page.items.push({ type: 'image', url: '', title: { en: '', ar: '' } });
+                    setConfig(cfg);
+                  }}
+                >
+                  {editLang === 'ar' ? 'إضافة عنصر' : 'Add item'}
+                </button>
+              </div>
+
+              <div className="row-grid">
+                {(() => {
+                  const page = ensurePage('page_media');
+                  const items = Array.isArray(page.items) ? page.items : [];
+                  return items.map((it, i) => (
+                    <div key={i} className="row-cta" style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr auto', gap: 10, alignItems: 'center' }}>
+                      <div className="form-group">
+                        <label>{editLang === 'ar' ? 'النوع' : 'Type'}</label>
+                        <select
+                          value={String(it?.type || 'image')}
+                          onChange={(e) => {
+                            const p = ensurePage('page_media');
+                            p.items = Array.isArray(p.items) ? p.items : [];
+                            p.items[i] = p.items[i] || { type: 'image', url: '', title: { en: '', ar: '' } };
+                            p.items[i].type = e.target.value;
+                            setConfig(cfg);
+                          }}
+                        >
+                          <option value="image">{editLang === 'ar' ? 'صورة' : 'Image'}</option>
+                          <option value="video">{editLang === 'ar' ? 'فيديو' : 'Video'}</option>
+                        </select>
+                      </div>
+                      <URLInput
+                        label={editLang === 'ar' ? 'الرابط' : 'URL'}
+                        value={String(it?.url || '')}
+                        onChange={(v) => {
+                          const p = ensurePage('page_media');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items[i] = p.items[i] || { type: 'image', url: '', title: { en: '', ar: '' } };
+                          p.items[i].url = v;
+                          setConfig(cfg);
+                        }}
+                        placeholder={editLang === 'ar' ? 'رابط أو رفع' : 'URL or upload'}
+                        accept="image/*,video/*"
+                      />
+                      <TextInput
+                        label={editLang === 'ar' ? 'العنوان' : 'Title'}
+                        value={(it?.title?.[editLang] || '')}
+                        onChange={(v) => {
+                          const p = ensurePage('page_media');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items[i] = p.items[i] || { type: 'image', url: '', title: { en: '', ar: '' } };
+                          p.items[i].title = p.items[i].title && typeof p.items[i].title === 'object' ? p.items[i].title : { en: '', ar: '' };
+                          p.items[i].title[editLang] = v;
+                          setConfig(cfg);
+                        }}
+                        dir={dir}
+                        placeholder={editLang === 'ar' ? 'مثال: مشروع ١' : 'e.g., Project 1'}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => safeDelete(() => {
+                          const p = ensurePage('page_media');
+                          p.items = Array.isArray(p.items) ? p.items : [];
+                          p.items.splice(i, 1);
+                          setConfig(cfg);
+                        }, editLang === 'ar' ? 'هل أنت متأكد من حذف هذا العنصر؟' : 'Delete this item?')}
+                      >
+                        {editLang === 'ar' ? 'حذف' : 'Delete'}
+                      </button>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+
+          {active === 'page_contact' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">{editLang === 'ar' ? 'صفحة: وسائل التواصل' : 'Page: Contact'}</div>
+                <div className="panel-desc">{editLang === 'ar' ? 'العناوين والبيانات الأساسية وروابط التواصل' : 'Headings, basics, and contact links'}</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+                <input
+                  type="checkbox"
+                  checked={cfg.sections.contact.enabled}
+                  onChange={(e) => setSectionEnabled('contact', e.target.checked)}
+                  id="page-contact-enabled"
+                />
+                <label htmlFor="page-contact-enabled" className="panel-desc">مفعّل</label>
+              </div>
+
+              <div className="form-grid">
+                <TextInput
+                  label="العنوان"
+                  value={cfg.sections.contact.heading[editLang]}
+                  onChange={(v) => setSectionText('contact', 'heading', v)}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'وسائل التواصل' : 'Contact'}
+                  required
+                />
+                <TextArea
+                  label="وصف موجز"
+                  value={(cfg.sections.contact.subheading?.[editLang] || '')}
+                  onChange={(v) => setSectionText('contact', 'subheading', v)}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'سطر يوضح كيف نتواصل معك' : 'Short line about how we help'}
+                  rows={2}
+                />
+                <TextInput
+                  label="البريد"
+                  value={cfg.sections.contact.email || ''}
+                  onChange={(v) => { cfg.sections.contact.email = v; setConfig(cfg); }}
+                  dir="ltr"
+                  placeholder="email@example.com"
+                  required
+                />
+                <TextInput
+                  label="الهاتف"
+                  value={cfg.sections.contact.phone || ''}
+                  onChange={(v) => { cfg.sections.contact.phone = v; setConfig(cfg); }}
+                  dir="ltr"
+                  placeholder="+201234567890"
+                />
+                <TextInput
+                  label="العنوان"
+                  value={cfg.sections.contact.address?.[editLang] || ''}
+                  onChange={(v) => { cfg.sections.contact.address = cfg.sections.contact.address || { en: '', ar: '' }; cfg.sections.contact.address[editLang] = v; setConfig(cfg); }}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'اكتب العنوان' : 'Write address'}
+                />
+                <TextInput
+                  label="ساعات العمل"
+                  value={(cfg.sections.contact.hours?.[editLang] || '')}
+                  onChange={(v) => setSectionText('contact', 'hours', v)}
+                  dir={dir}
+                  placeholder={editLang === 'ar' ? 'الاثنين-الجمعة 9 ص إلى 6 م' : 'Mon–Fri 9am–6pm, Sat 9am–1pm'}
+                />
+              </div>
+
+              <div className="panel-header" style={{ marginTop: 24 }}>
+                <div className="panel-title">{editLang === 'ar' ? 'روابط إضافية' : 'Additional links'}</div>
+                <button className="btn btn-outline" onClick={addLink}>{editLang === 'ar' ? 'إضافة رابط' : 'Add link'}</button>
+              </div>
+              <div className="row-grid" style={{ marginTop: 12 }}>
+                {(cfg.sections.contact.links || []).map((link, i) => (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'center' }}>
+                    <TextInput
+                      label={editLang === 'ar' ? 'الاسم' : 'Label'}
+                      value={link.label?.[editLang] || ''}
+                      onChange={(v) => updateLinkLabel(i, v)}
+                      dir={dir}
+                      placeholder={editLang === 'ar' ? 'اسم الرابط' : 'Link label'}
+                      required
+                    />
+                    <URLInput
+                      label={editLang === 'ar' ? 'الرابط' : 'URL'}
+                      value={link.url || ''}
+                      onChange={(v) => updateLinkUrl(i, v)}
+                      placeholder="https://..."
+                      required
+                    />
+                    <button className="btn btn-ghost" onClick={() => safeDelete(() => removeLink(i), editLang === 'ar' ? 'هل أنت متأكد من حذف هذا الرابط؟' : 'Delete this link?')}>
+                      {editLang === 'ar' ? 'حذف' : 'Delete'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Hero Panel */}
