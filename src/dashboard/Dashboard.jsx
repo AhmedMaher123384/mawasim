@@ -778,6 +778,24 @@ export default function Dashboard(props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, message: '' });
   const [serviceDetailsModal, setServiceDetailsModal] = useState({ isOpen: false, index: -1 });
+  const [toastState, setToastState] = useState({ open: false, text: '' });
+  const toastTimerRef = useRef(null);
+
+  const showToast = useCallback((text) => {
+    const message = String(text || '');
+    if (!message) return;
+    setToastState({ open: true, text: message });
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastState((prev) => ({ ...prev, open: false }));
+    }, 950);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const DASH_AUTH_KEY = 'mw_dashboard_auth_v1';
   const [isAuthed, setIsAuthed] = useState(() => {
@@ -1372,10 +1390,7 @@ export default function Dashboard(props) {
     try {
       if (hasRemote) await saveConfigRemote(config);
       saveToBrowser();
-      alert(hasRemote
-        ? 'تم حفظ الإعدادات عالميًا (سيرفر) وبالمتصفح.'
-        : 'تم الحفظ في المتصفح فقط.'
-      );
+      showToast('تم الحفظ');
     } catch (e) {
       console.error(e);
       const msg = String(e?.message || e || '')
@@ -1394,7 +1409,7 @@ export default function Dashboard(props) {
   const handleRemoteSave = async () => {
     try {
       await saveConfigRemote(config);
-      alert('تم حفظ الإعدادات على السيرفر بنجاح.');
+      showToast('تم الحفظ');
     } catch (e) {
       console.error(e);
       alert('تعذّر الحفظ على السيرفر. تأكد من إعداد VITE_CONFIG_ENDPOINT.');
@@ -2183,15 +2198,36 @@ export default function Dashboard(props) {
             justify-content: flex-start;
           }
 
-          .preview-frame {
-            height: 400px;
-          }
+        .preview-frame {
+          height: 400px;
         }
+      }
 
-        /* Animations */
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+      .dash-toast {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 999999;
+        background: rgba(15, 23, 42, 0.92);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        box-shadow: 0 14px 46px rgba(2, 6, 23, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        animation: dashToastIn 160ms ease-out;
+        pointer-events: none;
+      }
+      @keyframes dashToastIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Animations */
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -2201,6 +2237,12 @@ export default function Dashboard(props) {
           to { transform: scale(1); opacity: 1; }
         }
       `}</style>
+
+      {toastState.open ? (
+        <div className="dash-toast" role="status" aria-live="polite">
+          {toastState.text}
+        </div>
+      ) : null}
 
       {/* Modal التأكيد */}
       <ConfirmModal

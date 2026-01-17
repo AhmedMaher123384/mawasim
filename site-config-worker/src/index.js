@@ -13,11 +13,16 @@ export default {
     const url = new URL(request.url)
 
     const origin = request.headers.get('Origin') || ''
+    let originHost = ''
+    try {
+      originHost = origin ? new URL(origin).hostname : ''
+    } catch {}
     const allowListStr = (env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || '*').trim()
     const allowAll = allowListStr === '*'
     const allowList = allowAll ? [] : allowListStr.split(',').map(s => s.trim()).filter(Boolean)
     const isNetlifyOrigin = typeof origin === 'string' && origin.endsWith('.netlify.app')
-    const isAllowedOrigin = allowAll ? true : (origin ? (allowList.includes(origin) || isNetlifyOrigin) : false)
+    const isMawasimOrigin = typeof originHost === 'string' && (originHost === 'mawasim-services.com' || originHost.endsWith('.mawasim-services.com'))
+    const isAllowedOrigin = allowAll ? true : (origin ? (allowList.includes(origin) || isNetlifyOrigin || isMawasimOrigin) : false)
     const allowedOrigin = allowAll ? '*' : (isAllowedOrigin ? origin : '')
 
     const cors = {
