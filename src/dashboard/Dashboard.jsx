@@ -1310,6 +1310,7 @@ export default function Dashboard(props) {
   };
   const updateNavLabel = (i, v) => { cfg.site.menu[i].label[editLang] = v; setConfig(cfg); };
   const updateNavHref = (i, v) => { cfg.site.menu[i].href = v; setConfig(cfg); };
+  const updateNavEnabled = (i, v) => { cfg.site.menu[i].enabled = v; setConfig(cfg); };
   const removeNav = (i) => {
     cfg.site.menu.splice(i, 1);
     setConfig(cfg);
@@ -2619,7 +2620,7 @@ export default function Dashboard(props) {
               </div>
               <div className="row-grid" style={{ marginTop: 12 }}>
                 {(cfg.site.menu || []).map((l, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto', gap: 10, alignItems: 'center' }}>
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto auto', gap: 10, alignItems: 'center' }}>
                     <TextInput
                       label="الاسم"
                       value={l.label?.[editLang] || ''}
@@ -2634,6 +2635,18 @@ export default function Dashboard(props) {
                       placeholder="#about أو https://..."
                       required
                     />
+                    <div style={{ display: 'grid', gap: 6, justifyItems: 'center' }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(15,23,42,0.65)' }}>
+                        {editLang === 'ar' ? 'إظهار' : 'Show'}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={l?.enabled !== false}
+                        onChange={(e) => updateNavEnabled(i, e.target.checked)}
+                        aria-label={editLang === 'ar' ? 'إظهار الرابط' : 'Show link'}
+                        style={{ width: 18, height: 18, cursor: 'pointer' }}
+                      />
+                    </div>
                     <button className="btn btn-outline" onClick={() => moveNav(i, 'up')}>↑</button>
                     <button className="btn btn-outline" onClick={() => moveNav(i, 'down')}>↓</button>
                     <button

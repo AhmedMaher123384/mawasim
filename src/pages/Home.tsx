@@ -451,12 +451,12 @@ function Home() {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
           {servicesWithImages.map((service, index) => (
             <Link
               key={service.id}
               to={`/service/${service.id}`}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden group relative flex flex-col h-full transition-all duration-300 hover:shadow-2xl border border-gray-100 hover:border-green-200 ${
+              className={`bg-white rounded-2xl shadow-sm overflow-hidden group relative transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-green-200 aspect-square md:aspect-[4/5] lg:aspect-[3/4] ${
                 visibleSections.services ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
               }`}
               style={{ transitionDelay: `${Math.min(index * 50, 300)}ms` }}
@@ -464,61 +464,35 @@ function Home() {
               {/* شريط تدرج علوي */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-green-600 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-in-out"></div>
               
-              {/* حاوية الصورة مع تأثيرات hover - using a conditional for faster loading */}
-              <div className="h-56 overflow-hidden relative bg-gray-100">
-                {service.image ? (
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                    loading="lazy"
-                    width="300"
-                    height="200"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                    <Star className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
-                {/* تأثير تدرج الشفافية عند hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-emerald-700/30 to-teal-900/50 transition-all duration-300 ease-out"></div>
-              </div>
-              
-              {/* محتوى الخدمة */}
-              <div className="p-6 flex-grow text-right">
-                {/* عنوان الخدمة مع تأثير underline */}
-                <div className="relative inline-block mb-3">
-                  <h3 className="text-xl font-bold text-gray-800 group-hover:text-emerald-700 transition-colors duration-300">
-                    {service.title}
-                  </h3>
-                  <div className="absolute bottom-0 right-0 w-0 group-hover:w-full h-0.5 bg-emerald-500 transition-all duration-500 ease-out"></div>
+              {service.image ? (
+                <img
+                  src={service.image}
+                  alt={service.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                  width="300"
+                  height="300"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                  <Star className="w-8 h-8 text-gray-400" />
                 </div>
-                
-                <p className="text-gray-600 text-sm leading-relaxed">{service.description}</p>
-              </div>
-              
-              {/* زر استكشف الخدمة */}
-              <div className="mt-auto">
-                <div className="bg-green-600 hover:bg-green-700 transition-all duration-300 relative overflow-hidden">
-                  <div className="py-4 px-6 flex items-center justify-between relative z-10">
-                    <div className="relative flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-green-600 shadow-md flex items-center justify-center transform group-hover:translate-x-2 transition-all duration-300 relative overflow-hidden z-20">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-white transform transition-all duration-300 group-hover:rotate-90"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                    
-                    <span className="font-medium text-white transition-all duration-300 text-base tracking-wide px-3 py-1 rounded-md">
-                      استكشف الخدمة
-                    </span>
-                  </div>
+              )}
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-emerald-700/20 to-teal-900/35 transition-opacity duration-300 ease-out" />
+
+              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-right">
+                <h3 className="text-sm sm:text-base md:text-lg font-extrabold text-white leading-snug">
+                  {service.title}
+                </h3>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] sm:text-xs font-bold text-white shadow-sm backdrop-blur-sm transition-colors duration-300 group-hover:bg-emerald-500">
+                    <span>استكشف الآن</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
                 </div>
               </div>
             </Link>

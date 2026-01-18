@@ -6,7 +6,7 @@ import logo from '../assets/logo.png';
 import { useConfig } from '../config/ConfigContext';
 
 type BilingualText = { en?: string; ar?: string };
-type MenuConfigItem = { href?: string; label?: BilingualText };
+type MenuConfigItem = { href?: string; label?: BilingualText; enabled?: boolean };
 type NavItem =
   | { kind: 'router'; to: string; label: string; isActive: boolean }
   | { kind: 'external'; href: string; label: string };
@@ -156,7 +156,7 @@ function Navbar() {
     return location.pathname === (pathname || '/');
   };
 
-  const sourceMenu: MenuConfigItem[] = rawMenu.length ? rawMenu : defaultNavItems;
+  const sourceMenu: MenuConfigItem[] = (rawMenu.length ? rawMenu : defaultNavItems).filter((m) => m?.enabled !== false);
 
   const navItems: NavItem[] = sourceMenu.map((m) => {
     const label = m?.label ? (t(m.label) || m.label.ar || m.label.en || '') : '';
